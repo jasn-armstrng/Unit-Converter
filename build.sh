@@ -10,7 +10,7 @@ SOURCE_FILE="src/main.cpp"
 OUTPUT_EXECUTABLE="bin/unitconv"
 
 # Compiler command
-CC="gcc -std=c++20"
+CC="g++ -std=c++20"
 
 # Compilation options (CFLAGS)
 CFLAGS="-Wall -Wextra -O2"
