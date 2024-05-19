@@ -1,7 +1,8 @@
 // unitconv - Command-line utility for unit conversions
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
+#include <unordered_map>
 
 // Print usage information
 void print_usage() {
@@ -22,6 +23,38 @@ int main(int argc, char *argv[]) {
         printf("No arguments provided.\n");
         print_usage();
         return 1;
+    }
+
+    // Loop through each argument
+    for (int i = 1; i < argc; i++) {
+        // Check for help option
+        if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+            print_usage();
+            return 0;
+        }
+        // Check for version option
+        else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
+            printf("Version 1.0\n");
+            return 0;
+        }
+        else if (strcmp(argv[i], "--categories") == 0) {
+            printf("Available unit categories:\n \
+            - Temperature\n \
+            - Length\n \
+            - Massn\n \
+            - Volume\n \
+            - Data Size\n \
+            - Time\n \
+            - Energy\n \
+            - Pressure\n \
+            - Angle\n");
+            return 0;
+        }
+        else {
+            printf("Unknown option: %s\n", argv[i]);
+            print_usage();
+            return 1;
+        }
     }
 
     return EXIT_SUCCESS;
