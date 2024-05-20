@@ -4,13 +4,13 @@
 set -xe
 
 # Source code file name
-SOURCE_FILE="src/main.c"
+SOURCE_FILE="src/main.cpp"
 
 # Output executable name
 OUTPUT_EXECUTABLE="bin/unitconv"
 
 # Compiler command
-CC="gcc -std=c17"
+CC="g++ -std=c++20"
 
 # Compilation options (CFLAGS)
 CFLAGS="-Wall -Wextra -O2"
