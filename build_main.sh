@@ -7,7 +7,7 @@ set -xe
 SOURCE_FILE="src/main.cpp"
 
 # Output executable name
-OUTPUT_EXECUTABLE="bin/unitconv"
+OUTPUT_EXECUTABLE="bin/unites"
 
 # Compiler command
 CC="g++ -std=c++20"
