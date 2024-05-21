@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstring>
 
+
 std::unordered_map<std::string, std::vector<std::string> > conversion_categories;
 
 void initialize_conversion_category_map();  // Function to initialize the map
@@ -14,10 +15,13 @@ void display_categories();
 void display_units(const std::string& category);
 void handle_arguments(int argc, char* argv[]);
 
-// int main(int argc, char* argv[]) {
-//     handle_arguments(argc, argv);
-//     return 0;
-// }
+
+// Comment main to test
+int main(int argc, char* argv[]) {
+    handle_arguments(argc, argv);
+    return 0;
+}
+
 
 void initialize_conversion_category_map() {
     conversion_categories["Temperature"] = { "celsius", "fahrenheit", "Kelvin" };
@@ -31,6 +35,7 @@ void initialize_conversion_category_map() {
     conversion_categories["Angle"] = { "degrees", "radians" };
 }
 
+
 void print_usage() {
     printf("Usage: unites [OPTIONS] <source_unit> <target_unit> <value1> <value2>  ...\n");
     printf("Options:\n");
@@ -40,12 +45,14 @@ void print_usage() {
     printf(" --units <category>       Display available units in the specified category\n");
 }
 
+
 void display_categories() {
     std::cout << "Available unit categories:" << std::endl;
     for (const auto& [key, _] : conversion_categories) {
         std::cout << " - " << key << std::endl;
     }
 }
+
 
 void display_units(const std::string& category) {
     if (conversion_categories.find(category) != conversion_categories.end()) {
@@ -57,6 +64,7 @@ void display_units(const std::string& category) {
         std::cerr << "Unknown category: " << category << std::endl;
     }
 }
+
 
 void handle_arguments(int argc, char* argv[]) {
     // Check if no arguments were provided
@@ -82,16 +90,17 @@ void handle_arguments(int argc, char* argv[]) {
         if (argc == 2) {
             display_categories();
         } else {
+            // Communicate bad option for any argument after --categories
             printf("Unknown option: %s\n", argv[2]);
         }
     } else if (strcmp(argv[1], "--units") == 0 && argc > 2) {
         display_units(argv[2]);
-        // Communicate bad option for any argument after --units <category>
         if (argc > 3) {
+            // Communicate bad option for any argument after --units <category>
             printf("Unknown option: %s\n", argv[3]);
         }
-    // Report general incorrect usage
     } else {
+        // Communicate general incorrect usage
         printf("Unknown or incomplete option: %s\n", argv[1]);
         print_usage();
     }
