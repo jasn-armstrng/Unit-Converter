@@ -13,7 +13,7 @@ TEST_FILES="tests/test_main.cpp"
 
 # Output executable
 OUTPUT_DIR="bin"
-OUTPUT_EXECUTABLE="${OUTPUT_DIR}/unites_tests"
+OUTPUT_EXECUTABLE="${OUTPUT_DIR}/guc_tests"
 
 # Compile the test files and link with the Google Test lib
 g++ -std=c++20 -I${GTEST_INCLUDE_DIR} -L${GTEST_LIB_DIR} ${TEST_FILES} -lgtest -lgtest_main -pthread -o ${OUTPUT_EXECUTABLE}
