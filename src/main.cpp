@@ -11,6 +11,7 @@ std::unordered_map<std::string, std::vector<std::string> > constants;
 
 // Function declarations.
 // To do: Move function decs and defs to a header file.
+std::string to_upper(const std::string& str);
 void initialize_categories_map();
 void initialize_constants_map();
 void print_usage(void);  // Function to print program usage information
@@ -114,7 +115,7 @@ void display_constant(const std::string& constant)
     }
     else
     {
-        std::cerr << "Unknown constant: " << constant << std::endl;
+        std::cout << "Unknown constant: " << constant << std::endl;
     }
 }
 
