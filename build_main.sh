@@ -7,7 +7,7 @@ set -xe
 SOURCE_FILE="src/main.cpp"
 
 # Output executable name
-OUTPUT_EXECUTABLE="bin/unites"
+OUTPUT_EXECUTABLE="bin/guc"
 
 # Compiler command
 CC="g++ -std=c++20"
