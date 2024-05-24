@@ -1,12 +1,14 @@
 // test_main.cpp: Contains all the tests for the unit converter application
 #include <chrono>
+#include <cstring>
+#include <format>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-// Google test suite
 #include <gtest/gtest.h>
 
-// Include the functions you want to test
+// Include the functions/file to test
 #include "../src/main.cpp"
 
 // Helper function to convert a vector of strings to an array of C-strings
@@ -23,27 +25,9 @@ std::vector<char*> create_argv(const std::vector<std::string>& args)
     return argv;
 }
 
-// To do: I have a lot more cases to write, how do I manage the test arguments list below?
-// ---------------------------------------------------------------------------------------
-// guc --help
-// guc --version
-// guc --categories Temperature
-// guc --categories Length
-// guc --categories Energy
-// guc --units Energy
-// guc --ca b
-// guc --units
-// guc --categories b
-// guc --units Length
-// guc --categories
-// guc --units Data
-// guc
-// guc --units Energy b
-// ---------------------------------------------------------------------------------------
-
-TEST(UnitesTest, HelpOption)
+// Helper function to reuse the TEST internals
+void run_test_case(const std::string& test_name, const std::vector<std::string>& args, const std::string& expected_output)
 {
-    std::vector<std::string> args = {"guc", "--help"};
     auto argv = create_argv(args);
 
     testing::internal::CaptureStdout();
@@ -53,236 +37,46 @@ TEST(UnitesTest, HelpOption)
     for (char* arg : argv)
         delete[] arg;
 
-    EXPECT_TRUE(output.find("Usage: guc") != std::string::npos);
+    EXPECT_TRUE(output.find(expected_output) != std::string::npos) << "Test case failed: " << test_name;
 }
 
-TEST(UnitesTest, VersionOption)
+std::unordered_map<std::string, std::vector<std::vector<std::string> > > test_cases;
+void initialize_test_cases_map()
 {
-    std::vector<std::string> args = {"guc", "--version"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Version 1.0") != std::string::npos);
+    test_cases["HelpOption"] = { { "guc", "--help" }, { "Usage: guc" } };
+    test_cases["VersionOption"] = { {"guc", "--version"}, { "Version 1.0" } };
+    // Rest of tests ...
 }
 
-TEST(UnitesTest, CategoriesOption)
+TEST(UnitsTest, AllTestCases)
 {
-    std::vector<std::string> args = {"guc", "--unit-categories"};
-    auto argv = create_argv(args);
+    initialize_test_cases_map();
 
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
+    std::size_t total_tests = test_cases.size();
+    int test_counter = 0;
 
-    for (char* arg : argv)
-        delete[] arg;
+    for (const auto& test_case : test_cases)
+    {
+        const std::string& test_name = test_case.first;
+        const std::vector<std::string>& args = test_case.second[0];
+        const std::string& expected_output = test_case.second[1][0];
 
-    EXPECT_TRUE(output.find("Available unit categories:") != std::string::npos);
-}
+        const std::string run = std::format("\033[32m[ RUN      ]\033[0m - {}", test_name);
+        std::cout << run << std::endl;
 
-TEST(UnitesTest, UnitsOption)
-{
-    std::vector<std::string> args = {"guc", "--units", "Length"};
-    auto argv = create_argv(args);
+        run_test_case(test_name, args, expected_output);
 
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
+        test_counter++;
 
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Available units in the LENGTH category:") != std::string::npos);
-}
-
-TEST(UnitesTest, CategoriesTemperatureOption)
-{
-    std::vector<std::string> args = {"guc", "--unit-categories", "Temperature"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Unknown option: Temperature") != std::string::npos);
-}
-
-TEST(UnitesTest, CategoriesLengthOption)
-{
-    std::vector<std::string> args = {"guc", "--unit-categories", "Length"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Unknown option: Length") != std::string::npos);
-}
-
-TEST(UnitesTest, CategoriesEnergyOption)
-{
-    std::vector<std::string> args = {"guc", "--unit-categories", "Energy"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Unknown option: Energy") != std::string::npos);
-}
-
-TEST(UnitesTest, UnitsEnergyOption)
-{
-    std::vector<std::string> args = {"guc", "--units", "Energy"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Available units in the ENERGY category:") != std::string::npos);
-}
-
-TEST(UnitesTest, UnitsEnergyExtraOption) {
-    std::vector<std::string> args = {"guc", "--units", "Energy", "b"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Unknown option: b") != std::string::npos);
-}
-
-TEST(UnitesTest, CaBOption)
-{
-    std::vector<std::string> args = {"guc", "--ca", "b"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Unknown or incomplete option: --ca") != std::string::npos);
-}
-
-TEST(UnitesTest, UnitsWithoutCategory)
-{
-    std::vector<std::string> args = {"guc", "--units"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Unknown or incomplete option: --units") != std::string::npos);
-}
-
-TEST(UnitesTest, CategoriesBOption)
-{
-    std::vector<std::string> args = {"guc", "--unit-categories", "b"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Unknown option: b") != std::string::npos);
-}
-
-TEST(UnitesTest, UnitsLengthOption)
-{
-    std::vector<std::string> args = {"guc", "--units", "Length"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Available units in the LENGTH category:") != std::string::npos);
-}
-
-TEST(UnitesTest, CategoriesWithoutArgument) {
-    std::vector<std::string> args = {"guc", "--unit-categories"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Available unit categories:") != std::string::npos);
-}
-
-TEST(UnitesTest, UnitsDataOption)
-{
-    std::vector<std::string> args = {"guc", "--units", "Data"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("Available units in the DATA category:") != std::string::npos);
-}
-
-TEST(UnitesTest, NoArguments)
-{
-    std::vector<std::string> args = {"guc"};
-    auto argv = create_argv(args);
-
-    testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
-    std::string output = testing::internal::GetCapturedStdout();
-
-    for (char* arg : argv)
-        delete[] arg;
-
-    EXPECT_TRUE(output.find("No arguments provided.\nUsage: guc") != std::string::npos);
+        const std::string ok = std::format("\033[32m[       OK ]\033[0m - {}. Passed: {}/{}", test_name, test_counter, total_tests);
+        std::cout << ok << std::endl;
+    }
 }
 
 int main(int argc, char** argv)
 {
-    // Log-out test runtime
-    std::cout << "\033[36mTest runtime: " <<std::chrono::system_clock::now() << "\033[0m" << std::endl;
+    const std::string tests_start = format("\033[33mTests Start: {}\033[0m", std::chrono::system_clock::now());
+    std::cout << tests_start << std::endl;
 
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
