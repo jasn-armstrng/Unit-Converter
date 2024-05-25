@@ -41,24 +41,24 @@ std::string to_upper(const std::string& str)
 void initialize_categories_map()
 {
     categories["TEMPERATURE"] = { "celsius", "fahrenheit", "Kelvin" };
-    categories["LENGTH"] = { "nanometer", "millimeter", "centimeter", "meter", "kilometer", "inch", "feet", "yard", "furlong", "mile", "league", "nautical mile" };
-    categories["MASS"] = { "milligram", "gram", "kilogram", "tonne", "ounce", "pound", "stone" };
-    categories["VOLUME"] = { "milliliter", "centiliter", "liter", "fluid oz.", "gallon" };
-    categories["DATA"] = { "Bit", "Byte", "KiloByte", "MegaByte", "GigaByte", "TeraByte", "PetaByte" };
-    categories["TIME"] = { "nanosecond", "millisecond", "second", "minute", "hour", "day", "week", "year" };
-    categories["ENERGY"] = { "Joule", "calorie", "Watt", "kilowatt", "BTU", "Quad", "therm", "horsepower" };
-    categories["PRESSURE"] = { "Pascal", "atmosphere", "torr", "psi" };
-    categories["ANGLE"] = { "degrees", "radians" };
+    categories["LENGTH"]      = { "nanometer", "millimeter", "centimeter", "meter", "kilometer", "inch", "feet", "yard", "furlong", "mile", "league", "nautical mile" };
+    categories["MASS"]        = { "milligram", "gram", "kilogram", "tonne", "ounce", "pound", "stone" };
+    categories["VOLUME"]      = { "milliliter", "centiliter", "liter", "fluid oz.", "gallon" };
+    categories["DATA"]        = { "Bit", "Byte", "KiloByte", "MegaByte", "GigaByte", "TeraByte", "PetaByte" };
+    categories["TIME"]        = { "nanosecond", "millisecond", "second", "minute", "hour", "day", "week", "year" };
+    categories["ENERGY"]      = { "Joule", "calorie", "Watt", "kilowatt", "BTU", "Quad", "therm", "horsepower" };
+    categories["PRESSURE"]    = { "Pascal", "atmosphere", "torr", "psi" };
+    categories["ANGLE"]       = { "degrees", "radians" };
 }
 
 void initialize_constants_map()
 {
-    constants["SPEED OF LIGHT"] = { "299,792,458 meters/second", "1,079,252,848.8 kilometers/hour", "186,282.397 miles/second" };
-    constants["PI"] = { "3.14159" };
-    constants["ROOT 2"] = { "1.41421" };
-    constants["PHI"] = { "1.61803" };
-    constants["TAU"] = { "6.28318" };
-    constants["E"] = { "2.71828" };
+    constants["SPEED OF LIGHT"] = { "299792458" };
+    constants["PI"]             = { "3.14159" };
+    constants["ROOT 2"]         = { "1.41421" };
+    constants["PHI"]            = { "1.61803" };
+    constants["TAU"]            = { "6.28318" };
+    constants["E"]              = { "2.71828" };
 }
 
 void print_usage()
@@ -69,7 +69,6 @@ void print_usage()
     printf(" -v,  --version              Display version information and exit\n");
     printf(" -uc, --unit-categories      Display available unit categories\n");
     printf(" -u,  --units <category>     Display available units in the specified category\n");
-    // To do: Write test for the below and the updated switches
     printf(" -C,  --constants            Display available contants\n");
     printf(" -C,  --constants <constant> Display the value of the specified constant\n");
 }
@@ -93,7 +92,6 @@ void display_units(const std::string& category)
     else
     {
         std::cout << "Unknown category: " << category << std::endl;
-
     }
 }
 
@@ -109,7 +107,14 @@ void display_constant(const std::string& constant)
     std::string cons = to_upper(constant);
     if (constants.find(cons) != constants.end())
     {
-        std::cout << cons << ":" << std::endl;
+        // if (cons == "SPEED OF LIGHT")
+        // {
+        //     std::cout << cons << " (meters/second):" << std::endl;
+        // }
+        // else
+        // {
+        //     std::cout << cons << ":" << std::endl;
+        // }
         for (const auto& value : constants[cons])
             std::cout << value << std::endl;
     }
