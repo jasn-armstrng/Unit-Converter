@@ -51,7 +51,7 @@ bool run_test_case(const std::string& test_name, const std::vector<std::string>&
 std::unordered_map<std::string, std::vector<std::vector<std::string> > > test_cases;
 void initialize_test_cases_map()
 {
-    //        Name of test                          Test Arguments                                       Expected Output
+    // Name of test                               Test Arguments                                         Expected Output
     // ---------------------------------------------------------------------------------------------------------------------------------
     test_cases["NoArguments"]                   = { { "guc" },                                           { "No arguments provided.", "Usage: guc" } };
     test_cases["HelpOption"]                    = { { "guc", "--help" },                                 { "Usage: guc" } };
