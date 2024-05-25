@@ -1,0 +1,65 @@
+GUC(1)                           General Commands Manual                          GUC(1)
+
+NAME
+       guc - general units converter
+
+SYNOPSIS
+       guc [-Ch] <source_unit> <target_unit> <value1> <value2> ...
+
+DESCRIPTION
+       [Provide a detailed description of what the guc command does and its purpose]
+
+OPTIONS
+       -h, --help
+              Display the help message and exit.
+
+       -v, --version
+              Display version information and exit.
+
+       -uc, --unit-categories
+              Display available unit categories.
+
+       -u, --units <category>
+              Display available units in the specified category.
+
+       -C, --constants
+              Display available constants.
+
+       -C, --constants <constant>
+              Display the value of the specified constant.
+
+ARGUMENTS
+       <source_unit>
+              [Explain the purpose and format of the source_unit argument]
+
+       <target_unit>
+              [Explain the purpose and format of the target_unit argument]
+
+       <value1> <value2> ...
+              [Explain the purpose and format of the value arguments]
+
+EXAMPLES
+       [Provide practical examples of using the guc command]
+       $ guc -u LENGTH
+       $ guc --constants "SPEED OF LIGHT"
+       $ guc meters feet 10
+
+EXIT STATUS
+       [Explain the possible exit status codes and their meanings]
+
+FILES
+       [List any configuration files, data files, or system files the command uses]
+
+ENVIRONMENT VARIABLES
+       [Describe any environment variables that affect the command's behavior]
+
+SEE ALSO
+       [List related commands, man pages, or external documentation]
+
+AUTHOR
+       [Provide information about the command's author and maintainer]
+
+COPYRIGHT
+       [Include copyright details]
+
+[Category]                              [Date]                                   GUC(1)

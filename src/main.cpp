@@ -67,7 +67,7 @@ void print_usage()
     printf("Options:\n");
     printf(" -h,  --help                 Display this help message and exit\n");
     printf(" -v,  --version              Display version information and exit\n");
-    printf(" -uc, --unit-categories      Display available unit categories\n");
+    printf(" -c, --unit-categories       Display available unit categories\n");
     printf(" -u,  --units <category>     Display available units in the specified category\n");
     printf(" -C,  --constants            Display available contants\n");
     printf(" -C,  --constants <constant> Display the value of the specified constant\n");
@@ -137,7 +137,7 @@ void handle_arguments(int argc, char* argv[])
     else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)
         std::cout << "Version 1.0\n" << std::endl;
     // ------------------ Check for version option -------------------------
-    else if (strcmp(argv[1], "-uc") == 0 || strcmp(argv[1], "--unit-categories") == 0)
+    else if (strcmp(argv[1], "-c") == 0 || strcmp(argv[1], "--unit-categories") == 0)
     {
         if (argc == 2)
             display_categories();

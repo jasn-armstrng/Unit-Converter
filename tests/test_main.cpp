@@ -59,7 +59,7 @@ void initialize_test_cases_map()
     test_cases["VersionOption"]                 = { { "guc", "--version" },                              { "Version 1.0" } };
     test_cases["VersionOptionShort"]            = { { "guc", "-v" },                                     { "Version 1.0" } };
     test_cases["UnitCategoriesOption"]          = { { "guc", "--unit-categories" },                      { "Available unit categories:" } };
-    test_cases["UnitCategoriesOptionShort"]     = { { "guc", "-uc" },                                    { "Available unit categories:" } };
+    test_cases["UnitCategoriesOptionShort"]     = { { "guc", "-c" },                                     { "Available unit categories:" } };
     test_cases["UnitCategoriesUnknownOpt"]      = { { "guc", "--unit-categories", "unknown" },           { "Unknown option: unknown" } };
     test_cases["UnitsOption"]                   = { { "guc", "--units", "LENGTH" },                      { "Available units in the LENGTH category:" } };
     test_cases["UnitsOptionShort"]              = { { "guc", "-u", "MASS" },                             { "Available units in the MASS category:" } };
