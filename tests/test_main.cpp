@@ -72,14 +72,14 @@ void initialize_test_cases_map()
     test_cases["ConstantsOptionShort"]          = { { "guc", "-C" },                                     { "Available constants:" } };
     test_cases["ConstantsOptionUnknownOpt"]     = { { "guc", "--constants", "unknown" },                 { "Unknown constant: unknown" } };
     test_cases["ConstantOption"]                = { { "guc", "--constants", "SPEED OF LIGHT" },          { "299792458" } };
-    test_cases["ConstantOptionShort"]           = { { "guc", "-C", "PI" },                               { "3.14159" } };
+    test_cases["ConstantOptionShort"]           = { { "guc", "-C", "PI" },                               { "3.141592653589793" } };
     test_cases["ConstantOptionShortUnknownOpt"] = { { "guc", "-C", "PI", "unknown" },                    { "Unknown option: unknown" } };
     test_cases["ConstantOptionUnknownOpt"]      = { { "guc", "--constants", "TAU", "unknown" },          { "Unknown option: unknown" } };
     test_cases["ConstantOptionUnknownConst"]    = { { "guc", "--constants", "UNKNOWN" },                 { "Unknown constant: UNKNOWN" } };
     test_cases["ConstantOptionLowerCase"]       = { { "guc", "--constants", "speed of light" },          { "299792458" } };
     test_cases["ConstantOptionMixedCase"]       = { { "guc", "--constants", "sPeeD oF LiGHt" },          { "299792458" } };
-    test_cases["ConstantOptionSingleWord"]      = { { "guc", "--constants", "pi" },                      { "3.14159" } };
-    test_cases["ConstantOptionSingleWordMixed"] = { { "guc", "--constants", "Pi" },                      { "3.14159" } };
+    test_cases["ConstantOptionSingleWord"]      = { { "guc", "--constants", "pi" },                      { "3.141592653589793" } };
+    test_cases["ConstantOptionSingleWordMixed"] = { { "guc", "--constants", "Pi" },                      { "3.141592653589793" } };
     test_cases["UnknownOption"]                 = { { "guc", "--unknown" },                              { "Unknown or incomplete option: --unknown", "Usage: guc" } };
     test_cases["IncompleteOption"]              = { { "guc", "--units" },                                { "Unknown or incomplete option: --units", "Usage: guc" } };
 }

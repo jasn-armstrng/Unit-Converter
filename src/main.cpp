@@ -22,11 +22,11 @@ void display_constant(const std::string& constant);
 void handle_arguments(int argc, char* argv[]);
 
 // Comment main when running tests.
-int main(int argc, char* argv[])
-{
-    handle_arguments(argc, argv);
-    return 0;
-}
+// int main(int argc, char* argv[])
+// {
+//     handle_arguments(argc, argv);
+//     return 0;
+// }
 
 std::string to_upper(const std::string& str)
 {
@@ -54,11 +54,11 @@ void initialize_categories_map()
 void initialize_constants_map()
 {
     constants["SPEED OF LIGHT"] = { "299792458" };
-    constants["PI"]             = { "3.14159" };
-    constants["ROOT 2"]         = { "1.41421" };
-    constants["PHI"]            = { "1.61803" };
-    constants["TAU"]            = { "6.28318" };
-    constants["E"]              = { "2.71828" };
+    constants["PI"]             = { "3.141592653589793" };
+    constants["ROOT 2"]         = { "1.414213562373095" };
+    constants["PHI"]            = { "1.618033988749894" };
+    constants["TAU"]            = { "6.283185307179586" };
+    constants["E"]              = { "2.718281828459045" };
 }
 
 void print_usage()
