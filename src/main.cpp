@@ -22,11 +22,11 @@ void display_constant(const std::string& constant);
 void handle_arguments(int argc, char* argv[]);
 
 // Comment main when running tests.
-// int main(int argc, char* argv[])
-// {
-//     handle_arguments(argc, argv);
-//     return 0;
-// }
+int main(int argc, char* argv[])
+{
+    handle_arguments(argc, argv);
+    return 0;
+}
 
 std::string to_upper(const std::string& str)
 {
@@ -107,14 +107,6 @@ void display_constant(const std::string& constant)
     std::string cons = to_upper(constant);
     if (constants.find(cons) != constants.end())
     {
-        // if (cons == "SPEED OF LIGHT")
-        // {
-        //     std::cout << cons << " (meters/second):" << std::endl;
-        // }
-        // else
-        // {
-        //     std::cout << cons << ":" << std::endl;
-        // }
         for (const auto& value : constants[cons])
             std::cout << value << std::endl;
     }
