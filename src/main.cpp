@@ -53,12 +53,14 @@ void initialize_categories_map()
 
 void initialize_constants_map()
 {
-    constants["SPEED OF LIGHT"] = { "299792458" };
-    constants["PI"]             = { "3.14159" };
-    constants["ROOT 2"]         = { "1.41421" };
-    constants["PHI"]            = { "1.61803" };
-    constants["TAU"]            = { "6.28318" };
-    constants["E"]              = { "2.71828" };
+    // Constant                     Value         Measurement Unit
+    // -------------------------------------------------------------
+    constants["SPEED OF LIGHT"] = { "299792458", "[meters/second]" };
+    constants["PI"]             = { "3.141592653589793", "" };
+    constants["ROOT 2"]         = { "1.414213562373095", "" };
+    constants["PHI"]            = { "1.618033988749894", "" };
+    constants["TAU"]            = { "6.283185307179586", "" };
+    constants["E"]              = { "2.718281828459045", "" };
 }
 
 void print_usage()
@@ -67,7 +69,7 @@ void print_usage()
     printf("Options:\n");
     printf(" -h,  --help                 Display this help message and exit\n");
     printf(" -v,  --version              Display version information and exit\n");
-    printf(" -c, --unit-categories       Display available unit categories\n");
+    printf(" -c,  --unit-categories      Display available unit categories\n");
     printf(" -u,  --units <category>     Display available units in the specified category\n");
     printf(" -C,  --constants            Display available contants\n");
     printf(" -C,  --constants <constant> Display the value of the specified constant\n");
@@ -98,8 +100,9 @@ void display_units(const std::string& category)
 void display_constants()
 {
     std::cout << "Available constants:" << std::endl;
-    for (const auto& [key, _] : constants)
-        std::cout << " - " << key << std::endl;
+    for (const auto& [key, value] : constants)
+        // Display available constant and note about its implementation in the program
+        std::cout << " - " << key << " " << value[1] << std::endl;
 }
 
 void display_constant(const std::string& constant)
