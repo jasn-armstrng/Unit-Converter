@@ -11,6 +11,42 @@
 // Include the functions/file to test
 #include "../src/main.cpp"
 
+// Test cases
+static std::unordered_map<std::string, std::vector<std::vector<std::string> > > test_cases =
+{
+    // Name of test                   Test Arguments                                        Expected Output
+    // ---------------------------------------------------------------------------------------------------------------------------------
+    {"NoArguments",                   {{ "guc" },                                           { "No arguments provided.", "Usage: guc" }}},
+    {"HelpOption",                    {{ "guc", "--help" },                                 { "Usage: guc" }}},
+    {"HelpOptionShort",               {{ "guc", "-h" },                                     { "Usage: guc" }}},
+    {"VersionOption",                 {{ "guc", "--version" },                              { "Version 1.0" }}},
+    {"VersionOptionShort",            {{ "guc", "-v" },                                     { "Version 1.0" }}},
+    {"UnitCategoriesOption",          {{ "guc", "--unit-categories" },                      { "Available unit categories:" }}},
+    {"UnitCategoriesOptionShort",     {{ "guc", "-c" },                                     { "Available unit categories:" }}},
+    {"UnitCategoriesUnknownOpt",      {{ "guc", "--unit-categories", "unknown" },           { "Unknown option: unknown" }}},
+    {"UnitsOption",                   {{ "guc", "--units", "LENGTH" },                      { "Available units in the LENGTH category:" }}},
+    {"UnitsOptionShort",              {{ "guc", "-u", "MASS" },                             { "Available units in the MASS category:" }}},
+    {"UnitsOptionUnknownOpt",         {{ "guc", "--units", "LENGTH", "unknown" },           { "Unknown option: unknown" }}},
+    {"UnitsOptionUnknownCat",         {{ "guc", "--units", "UNKNOWN" },                     { "Unknown category: UNKNOWN" }}},
+    {"UnitsOptionLowerCase",          {{ "guc", "--units", "length" },                      { "Available units in the LENGTH category:" }}},
+    {"UnitsOptionMixedCase",          {{ "guc", "--units", "LenGth" },                      { "Available units in the LENGTH category:" }}},
+    {"UnitsOptionMultiWordCategory",  {{ "guc", "--units", "\"data transfer rate\"" },      { "Unknown category: \"data transfer rate\"" }}},
+    {"ConstantsOption",               {{ "guc", "--constants" },                            { "Available constants:" }}},
+    {"ConstantsOptionShort",          {{ "guc", "-C" },                                     { "Available constants:" }}},
+    {"ConstantsOptionUnknownOpt",     {{ "guc", "--constants", "unknown" },                 { "Unknown constant: unknown" }}},
+    {"ConstantOption",                {{ "guc", "--constants", "SPEED OF LIGHT" },          { "299792458" }}},
+    {"ConstantOptionShort" ,          {{ "guc", "-C", "PI" },                               { "3.141592653589793" }}},
+    {"ConstantOptionShortUnknownOpt", {{ "guc", "-C", "PI", "unknown" },                    { "Unknown option: unknown" }}},
+    {"ConstantOptionUnknownOpt",      {{ "guc", "--constants", "TAU", "unknown" },          { "Unknown option: unknown" }}},
+    {"ConstantOptionUnknownConst",    {{ "guc", "--constants", "UNKNOWN" },                 { "Unknown constant: UNKNOWN" }}},
+    {"ConstantOptionLowerCase",       {{ "guc", "--constants", "speed of light" },          { "299792458" }}},
+    {"ConstantOptionMixedCase",       {{ "guc", "--constants", "sPeeD oF LiGHt" },          { "299792458" }}},
+    {"ConstantOptionSingleWord",      {{ "guc", "--constants", "pi" },                      { "3.141592653589793" }}},
+    {"ConstantOptionSingleWordMixed", {{ "guc", "--constants", "Pi" },                      { "3.141592653589793" }}},
+    {"UnknownOption",                 {{ "guc", "--unknown" },                              { "Unknown or incomplete option: --unknown", "Usage: guc" }}},
+    {"IncompleteOption",              {{ "guc", "--units" },                                { "Unknown or incomplete option: --units", "Usage: guc" }}}
+};
+
 // Helper function to convert a vector of strings to an array of C-strings
 std::vector<char*> create_argv(const std::vector<std::string>& args)
 {
@@ -48,46 +84,8 @@ bool run_test_case(const std::string& test_name, const std::vector<std::string>&
     return test_passed;
 }
 
-std::unordered_map<std::string, std::vector<std::vector<std::string> > > test_cases;
-void initialize_test_cases_map()
-{
-    // Name of test                               Test Arguments                                         Expected Output
-    // ---------------------------------------------------------------------------------------------------------------------------------
-    test_cases["NoArguments"]                   = { { "guc" },                                           { "No arguments provided.", "Usage: guc" } };
-    test_cases["HelpOption"]                    = { { "guc", "--help" },                                 { "Usage: guc" } };
-    test_cases["HelpOptionShort"]               = { { "guc", "-h" },                                     { "Usage: guc" } };
-    test_cases["VersionOption"]                 = { { "guc", "--version" },                              { "Version 1.0" } };
-    test_cases["VersionOptionShort"]            = { { "guc", "-v" },                                     { "Version 1.0" } };
-    test_cases["UnitCategoriesOption"]          = { { "guc", "--unit-categories" },                      { "Available unit categories:" } };
-    test_cases["UnitCategoriesOptionShort"]     = { { "guc", "-c" },                                     { "Available unit categories:" } };
-    test_cases["UnitCategoriesUnknownOpt"]      = { { "guc", "--unit-categories", "unknown" },           { "Unknown option: unknown" } };
-    test_cases["UnitsOption"]                   = { { "guc", "--units", "LENGTH" },                      { "Available units in the LENGTH category:" } };
-    test_cases["UnitsOptionShort"]              = { { "guc", "-u", "MASS" },                             { "Available units in the MASS category:" } };
-    test_cases["UnitsOptionUnknownOpt"]         = { { "guc", "--units", "LENGTH", "unknown" },           { "Unknown option: unknown" } };
-    test_cases["UnitsOptionUnknownCat"]         = { { "guc", "--units", "UNKNOWN" },                     { "Unknown category: UNKNOWN" } };
-    test_cases["UnitsOptionLowerCase"]          = { { "guc", "--units", "length" },                      { "Available units in the LENGTH category:" } };
-    test_cases["UnitsOptionMixedCase"]          = { { "guc", "--units", "LenGth" },                      { "Available units in the LENGTH category:" } };
-    test_cases["UnitsOptionMultiWordCategory"]  = { { "guc", "--units", "\"data transfer rate\"" },      { "Unknown category: \"data transfer rate\"" } };
-    test_cases["ConstantsOption"]               = { { "guc", "--constants" },                            { "Available constants:" } };
-    test_cases["ConstantsOptionShort"]          = { { "guc", "-C" },                                     { "Available constants:" } };
-    test_cases["ConstantsOptionUnknownOpt"]     = { { "guc", "--constants", "unknown" },                 { "Unknown constant: unknown" } };
-    test_cases["ConstantOption"]                = { { "guc", "--constants", "SPEED OF LIGHT" },          { "299792458" } };
-    test_cases["ConstantOptionShort"]           = { { "guc", "-C", "PI" },                               { "3.141592653589793" } };
-    test_cases["ConstantOptionShortUnknownOpt"] = { { "guc", "-C", "PI", "unknown" },                    { "Unknown option: unknown" } };
-    test_cases["ConstantOptionUnknownOpt"]      = { { "guc", "--constants", "TAU", "unknown" },          { "Unknown option: unknown" } };
-    test_cases["ConstantOptionUnknownConst"]    = { { "guc", "--constants", "UNKNOWN" },                 { "Unknown constant: UNKNOWN" } };
-    test_cases["ConstantOptionLowerCase"]       = { { "guc", "--constants", "speed of light" },          { "299792458" } };
-    test_cases["ConstantOptionMixedCase"]       = { { "guc", "--constants", "sPeeD oF LiGHt" },          { "299792458" } };
-    test_cases["ConstantOptionSingleWord"]      = { { "guc", "--constants", "pi" },                      { "3.141592653589793" } };
-    test_cases["ConstantOptionSingleWordMixed"] = { { "guc", "--constants", "Pi" },                      { "3.141592653589793" } };
-    test_cases["UnknownOption"]                 = { { "guc", "--unknown" },                              { "Unknown or incomplete option: --unknown", "Usage: guc" } };
-    test_cases["IncompleteOption"]              = { { "guc", "--units" },                                { "Unknown or incomplete option: --units", "Usage: guc" } };
-}
-
 TEST(UnitsTest, AllTestCases)
 {
-    initialize_test_cases_map();
-
     std::size_t total_tests = test_cases.size();
     int test_counter = 0;
 
