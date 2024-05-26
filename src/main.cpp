@@ -1,13 +1,36 @@
 // guc - (GNU/General) Command-line utility for unit conversions
+#include <cstddef>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-// Globally accessed maps.
+// Globally accessed static maps.
 // Can I move this to a header file?
-std::unordered_map<std::string, std::vector<std::string> > categories;
-std::unordered_map<std::string, std::vector<std::string> > constants;
+static std::unordered_map<std::string, std::vector<std::string> > categories =
+{
+    {"TEMPERATURE", { "celsius", "fahrenheit", "Kelvin" }},
+    {"LENGTH",      { "nanometer", "millimeter", "centimeter", "meter", "kilometer", "inch", "feet", "yard", "furlong", "mile", "league", "nautical mile" }},
+    {"MASS",        { "milligram", "gram", "kilogram", "tonne", "ounce", "pound", "stone" }},
+    {"VOLUME",      { "milliliter", "centiliter", "liter", "fluid oz.", "gallon" }},
+    {"DATA",        { "Bit", "Byte", "KiloByte", "MegaByte", "GigaByte", "TeraByte", "PetaByte" }},
+    {"TIME",        { "nanosecond", "millisecond", "second", "minute", "hour", "day", "week", "year" }},
+    {"ENERGY",      { "Joule", "calorie", "Watt", "kilowatt", "BTU", "Quad", "therm", "horsepower" }},
+    {"PRESSURE",    { "Pascal", "atmosphere", "torr", "psi" }},
+    {"ANGLE",       { "degrees", "radians" }}
+};
+
+static std::unordered_map<std::string, std::vector<std::string> > constants =
+{
+    // Constant           Value                Note/Measurement Unit
+    // -------------------------------------------------------------
+    {"SPEED OF LIGHT", { "299792458",         "[meters/second]" }},
+    {"PI",             { "3.141592653589793", "" }},
+    {"ROOT 2",         { "1.414213562373095", "" }},
+    {"PHI",            { "1.618033988749894", "" }},
+    {"TAU",            { "6.283185307179586", "" }},
+    {"E",              { "2.718281828459045", "" }}
+};
 
 // Function declarations.
 // To do: Move function decs and defs to a header file.
@@ -22,11 +45,11 @@ void display_constant(const std::string& constant);
 void handle_arguments(int argc, char* argv[]);
 
 // Comment main when running tests.
-int main(int argc, char* argv[])
-{
-    handle_arguments(argc, argv);
-    return 0;
-}
+// int main(int argc, char* argv[])
+// {
+//     handle_arguments(argc, argv);
+//     return 0;
+// }
 
 std::string to_upper(const std::string& str)
 {
@@ -36,31 +59,6 @@ std::string to_upper(const std::string& str)
         return std::toupper(c);
     });
     return upperStr;
-}
-
-void initialize_categories_map()
-{
-    categories["TEMPERATURE"] = { "celsius", "fahrenheit", "Kelvin" };
-    categories["LENGTH"]      = { "nanometer", "millimeter", "centimeter", "meter", "kilometer", "inch", "feet", "yard", "furlong", "mile", "league", "nautical mile" };
-    categories["MASS"]        = { "milligram", "gram", "kilogram", "tonne", "ounce", "pound", "stone" };
-    categories["VOLUME"]      = { "milliliter", "centiliter", "liter", "fluid oz.", "gallon" };
-    categories["DATA"]        = { "Bit", "Byte", "KiloByte", "MegaByte", "GigaByte", "TeraByte", "PetaByte" };
-    categories["TIME"]        = { "nanosecond", "millisecond", "second", "minute", "hour", "day", "week", "year" };
-    categories["ENERGY"]      = { "Joule", "calorie", "Watt", "kilowatt", "BTU", "Quad", "therm", "horsepower" };
-    categories["PRESSURE"]    = { "Pascal", "atmosphere", "torr", "psi" };
-    categories["ANGLE"]       = { "degrees", "radians" };
-}
-
-void initialize_constants_map()
-{
-    // Constant                     Value         Measurement Unit
-    // -------------------------------------------------------------
-    constants["SPEED OF LIGHT"] = { "299792458", "[meters/second]" };
-    constants["PI"]             = { "3.141592653589793", "" };
-    constants["ROOT 2"]         = { "1.414213562373095", "" };
-    constants["PHI"]            = { "1.618033988749894", "" };
-    constants["TAU"]            = { "6.283185307179586", "" };
-    constants["E"]              = { "2.718281828459045", "" };
 }
 
 void print_usage()
@@ -92,9 +90,7 @@ void display_units(const std::string& category)
             std::cout << " - " << value << std::endl;
     }
     else
-    {
         std::cout << "Unknown category: " << category << std::endl;
-    }
 }
 
 void display_constants()
@@ -109,14 +105,9 @@ void display_constant(const std::string& constant)
 {
     std::string cons = to_upper(constant);
     if (constants.find(cons) != constants.end())
-    {
-        for (const auto& value : constants[cons])
-            std::cout << value << std::endl;
-    }
+        std::cout << constants[cons][0] << std::endl;
     else
-    {
         std::cout << "Unknown constant: " << constant << std::endl;
-    }
 }
 
 void handle_arguments(int argc, char* argv[])
@@ -129,10 +120,7 @@ void handle_arguments(int argc, char* argv[])
         print_usage();
         return;
     }
-    // Initialise Category/Units and Constants maps accessed below.
-    // Can initialisation at compile time?
-    initialize_categories_map();
-    initialize_constants_map();
+
     // ------------------ Check for help option ----------------------------
     if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
         print_usage();
