@@ -1,42 +1,10 @@
-// guc - (GNU/General) Command-line utility for unit conversions
-#include <cstddef>
+// con - General Command-line utility for unit conversions
+#include <cmath>
 #include <iostream>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
-// Globally accessed static maps.
-// Can I move this to a header file?
-static std::unordered_map<std::string, std::vector<std::string> > categories =
-{
-    {"TEMPERATURE", { "celsius", "fahrenheit", "Kelvin" }},
-    {"LENGTH",      { "nanometer", "millimeter", "centimeter", "meter", "kilometer", "inch", "feet", "yard", "furlong", "mile", "league", "nautical mile" }},
-    {"MASS",        { "milligram", "gram", "kilogram", "tonne", "ounce", "pound", "stone" }},
-    {"VOLUME",      { "milliliter", "centiliter", "liter", "fluid oz.", "gallon" }},
-    {"DATA",        { "Bit", "Byte", "KiloByte", "MegaByte", "GigaByte", "TeraByte", "PetaByte" }},
-    {"TIME",        { "nanosecond", "millisecond", "second", "minute", "hour", "day", "week", "year" }},
-    {"ENERGY",      { "Joule", "calorie", "Watt", "kilowatt", "BTU", "Quad", "therm", "horsepower" }},
-    {"PRESSURE",    { "Pascal", "atmosphere", "torr", "psi" }},
-    {"ANGLE",       { "degrees", "radians" }}
-};
+#include "../headers/common.h"
 
-static std::unordered_map<std::string, std::vector<std::string> > constants =
-{
-    // Constant           Value                Note/Measurement Unit
-    // -------------------------------------------------------------
-    {"SPEED OF LIGHT", { "299792458",         "[meters/second]" }},
-    {"PI",             { "3.141592653589793", "" }},
-    {"ROOT 2",         { "1.414213562373095", "" }},
-    {"PHI",            { "1.618033988749894", "" }},
-    {"TAU",            { "6.283185307179586", "" }},
-    {"E",              { "2.718281828459045", "" }}
-};
-
-// Function declarations.
-// To do: Move function decs and defs to a header file.
-std::string to_upper(const std::string& str);
-void initialize_categories_map();
-void initialize_constants_map();
 void print_usage(void);  // Function to print program usage information
 void display_categories();
 void display_units(const std::string& category);
@@ -45,25 +13,15 @@ void display_constant(const std::string& constant);
 void handle_arguments(int argc, char* argv[]);
 
 // Comment main when running tests.
-// int main(int argc, char* argv[])
-// {
-//     handle_arguments(argc, argv);
-//     return 0;
-// }
-
-std::string to_upper(const std::string& str)
+int main(int argc, char* argv[])
 {
-    std::string upperStr = str;
-    std::transform(upperStr.begin(), upperStr.end(), upperStr.begin(), [](unsigned char c)
-    {
-        return std::toupper(c);
-    });
-    return upperStr;
+    handle_arguments(argc, argv);
+    return 0;
 }
 
 void print_usage()
 {
-    printf("Usage: guc [OPTIONS] <source_unit> <target_unit> <value1> <value2>  ...\n");
+    printf("Usage: con [OPTIONS] <source_unit> <target_unit> <value1> <value2>  ...\n");
     printf("Options:\n");
     printf(" -h,  --help                 Display this help message and exit\n");
     printf(" -v,  --version              Display version information and exit\n");
@@ -76,18 +34,18 @@ void print_usage()
 void display_categories()
 {
     std::cout << "Available unit categories:" << std::endl;
-    for (const auto& [key, _] : categories)
+    for (const auto& [key, _] : conversions)
         std::cout << " - " << key << std::endl;
 }
 
 void display_units(const std::string& category)
 {
     std::string cat = to_upper(category);
-    if (categories.find(cat) != categories.end())
+    if (conversions.find(cat) != conversions.end())
     {
         std::cout << "Available units in the " << cat << " category:" << std::endl;
-        for (const auto& value : categories[cat])
-            std::cout << " - " << value << std::endl;
+        for (const auto& value : conversions[cat])
+            std::cout << " - " << value.first << std::endl;
     }
     else
         std::cout << "Unknown category: " << category << std::endl;
@@ -126,7 +84,7 @@ void handle_arguments(int argc, char* argv[])
         print_usage();
     // ------------------ Check for version option -------------------------
     else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)
-        std::cout << "Version 1.0\n" << std::endl;
+        std::cout << "Version 1.0" << std::endl;
     // ------------------ Check for version option -------------------------
     else if (strcmp(argv[1], "-c") == 0 || strcmp(argv[1], "--unit-categories") == 0)
     {
