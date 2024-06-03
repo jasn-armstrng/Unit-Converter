@@ -1,14 +1,13 @@
-CON(1)                           General Commands Manual                          CON(1)
+UC(1)                           General Commands Manual                          UC(1)
 
 NAME
-       con - general unit converter
+       uc - (measurement) unit converter
 
 SYNOPSIS
-       con [-Cchv] [-u category] [-C constant]
-                   [--unit-category category] [--constant constant]
+       uc [-Cchv] [-u category] [-C constant] <amount> <unit_from> <unit_to>
 
 DESCRIPTION
-       The con utility,
+       The uc utility,
         1. Reads the units to convert between and the value(s) to be converted from the
            standard input, and perfoms the conversion(s). The result(s) are then written
            to the standard output.
@@ -47,24 +46,24 @@ ARGUMENTS
 EXAMPLES
        Arguments to options are case insensitive; the below are all valid:
 
-            $ con -u LENGTH
-            $ con -u length
-            $ con -u LenGth
-            $ con -C taU
-            $ con -C PHI
+            $ uc -u LENGTH
+            $ uc -u length
+            $ uc -u LenGth
+            $ uc -C taU
+            $ uc -C PHI
 
        Use quotes for arguments to options that contain spaces:
 
-            $ con --constants "SPEED OF LIGHT"
+            $ uc -C "SPEED OF LIGHT"
 
-       Conversions can be done on single and multiple unit values:
+       Conversions:
 
-            $ con meters feet 5 10 15 20
-            $ con bytes kilobytes 2500
-            $ con liters gallons 10.25
+            $ uc 5 meters feet
+            $ uc 2500 KB MB
+            $ uc 10.25 l gal
 
 EXIT STATUS
-       The con utility exits 0 on success, and >0 if an error occurs.
+       The uc utility exits 0 on success, and >0 if an error occurs.
 
 FILES
        [List any configuration files, data files, or system files the command uses]
@@ -81,4 +80,4 @@ AUTHOR
 BUGS
        [List known issues]
 
-[Category]                              May 25, 2024                             CON(1)
+[Category]                              May 25, 2024                             UC(1)

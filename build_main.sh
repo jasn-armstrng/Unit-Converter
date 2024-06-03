@@ -13,10 +13,10 @@ HEADER_DIR="headers"
 OUTPUT_DIR="bin"
 
 # Output executable name
-OUTPUT_EXECUTABLE="con"
+OUTPUT_EXECUTABLE="uc"
 
 # Compiler command
-CC="g++ -std=c++20"
+CC="g++ -std=c++11"
 
 # Compilation options (CFLAGS)
 CFLAGS="-Wall -Wextra -O2"
@@ -25,7 +25,7 @@ CFLAGS="-Wall -Wextra -O2"
 INCLUDE_PATH="-I$HEADER_DIR"
 
 # List of source files
-SOURCE_FILES="$SRC_DIR/main.cpp $SRC_DIR/constants.cpp $SRC_DIR/conversions.cpp $SRC_DIR/utilities.cpp"
+SOURCE_FILES="$SRC_DIR/main.cpp"
 
 # Create the output directory if it doesn't exist
 mkdir -p $OUTPUT_DIR
