@@ -21,7 +21,7 @@ TEST_DIR="tests"
 OUTPUT_DIR="bin"
 
 # Output executable name
-OUTPUT_EXECUTABLE="con_tests"
+OUTPUT_EXECUTABLE="uc_tests"
 
 # Compiler command
 CC="g++ -std=c++20"

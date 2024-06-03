@@ -1,126 +1,193 @@
-// con - General Command-line utility for unit conversions
-#include <cmath>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <string>
+#include <unordered_set>
+#include <vector>
 
-#include "../headers/common.h"
+std::string toUpper(const std::string& str);
+void printUsage();
 
-void print_usage(void);  // Function to print program usage information
-void display_categories();
-void display_units(const std::string& category);
-void display_constants();
-void display_constant(const std::string& constant);
-void handle_arguments(int argc, char* argv[]);
+struct Unit {
+    std::string name;
+    std::string symbol;
+    std::string category;
+    std::string baseUnit;
+    double conversionFactor;  // To convert to/from the base unit
+};
 
-// Comment main when running tests.
-int main(int argc, char* argv[])
-{
-    handle_arguments(argc, argv);
+struct Units {
+    std::unordered_set<std::string> categories;
+    std::vector<Unit> units;  // Units ordered by category and conversion factor asc
+
+    void listCategories() {
+        int count = 1;
+        for (auto& category: categories) {
+            std::cout << std::setw(3) << std::left << count << category << std::endl;
+            count++;
+        }
+    }
+
+    void listUnits(const std::string& category) {
+        int count = 1;
+        for (const Unit& unit: units) {
+            if (unit.category == toUpper(category)) {
+                std::cout << std::setw(3) << std::left << count << std::setw(20) << std::left <<unit.name << unit.symbol << std::endl;
+                count++;
+            }
+        }
+    }
+
+    void convertUnit(double amount, const std::string& unitFrom, const std::string& unitTo) {
+        std::string unitFromBase;
+        std::string unitToBase;
+        double conversionFactorFrom = 0;
+        double conversionFactorTo = 0;
+
+        for (auto& unit: units) {
+            if (unit.name == unitFrom || unit.symbol == unitFrom) {
+                conversionFactorFrom = unit.conversionFactor;
+                unitFromBase = unit.baseUnit;
+            }
+
+            if (unit.name == unitTo || unit.symbol == unitTo) {
+                conversionFactorTo = unit.conversionFactor;
+                unitToBase = unit.baseUnit;
+            }
+        }
+
+        if (unitFromBase == unitToBase) {
+            double result = (amount * conversionFactorFrom)/conversionFactorTo;
+            std::cout << result << std::endl;
+        } else if (conversionFactorFrom == 0 ) {
+            std::cout << "Unknown unit: " << unitFrom << std::endl;
+        } else if (conversionFactorTo == 0 ) {
+            std::cout << "Unknown unit: " << unitTo << std::endl;
+        } else {
+            std::cout << "Cannot convert between: " << unitFrom << " and " << unitTo << std::endl;
+        }
+    }
+};
+
+void load_conversion_units(Units& u);
+void uc(int argc, char* argv[], Units& u);
+
+int main(int argc, char* argv[]) {
+    // Will need to statically compile these two
+    Units allUnits;
+    load_conversion_units(allUnits);
+
+    uc(argc, argv, allUnits);
     return 0;
 }
 
-void print_usage()
-{
-    printf("Usage: con [OPTIONS] <source_unit> <target_unit> <value1> <value2>  ...\n");
-    printf("Options:\n");
-    printf(" -h,  --help                 Display this help message and exit\n");
-    printf(" -v,  --version              Display version information and exit\n");
-    printf(" -c,  --unit-categories      Display available unit categories\n");
-    printf(" -u,  --units <category>     Display available units in the specified category\n");
-    printf(" -C,  --constants            Display available contants\n");
-    printf(" -C,  --constants <constant> Display the value of the specified constant\n");
-}
+void load_conversion_units(Units& u) {
+    // Load the conversion unit details from file into map
+    std::string conversion_units_file = "<path to units file>";
+    std::ifstream inputFile(conversion_units_file);
 
-void display_categories()
-{
-    std::cout << "Available unit categories:" << std::endl;
-    for (const auto& [key, _] : conversions)
-        std::cout << " - " << key << std::endl;
-}
+    if(!inputFile)
+        std::cout << "Failed to open " << conversion_units_file << std::endl;
 
-void display_units(const std::string& category)
-{
-    std::string cat = to_upper(category);
-    if (conversions.find(cat) != conversions.end())
-    {
-        std::cout << "Available units in the " << cat << " category:" << std::endl;
-        for (const auto& value : conversions[cat])
-            std::cout << " - " << value.first << std::endl;
+    std::string line;
+    while(std::getline(inputFile, line)) {
+        // conversion_units.dat is a fixed column-width delimited file
+        std::string category = line.substr(0,12);
+        std::string name = line.substr(12,20);
+        std::string symbol = line.substr(32,8);
+        std::string baseUnit = line.substr(40,15);
+        std::string conversionFactor = line.substr(55,20);
+
+        // Trim whitespace
+        category.erase(category.find_last_not_of(" \t") + 1);
+        name.erase(name.find_last_not_of(" \t") + 1);
+        symbol.erase(symbol.find_last_not_of(" \t") + 1);
+        baseUnit.erase(baseUnit.find_last_not_of(" \t") + 1);
+        conversionFactor.erase(conversionFactor.find_last_not_of(" \t") + 1);
+
+        Unit unit = {name, symbol, category, baseUnit, std::stod(conversionFactor)};
+        u.units.push_back(unit);
+        u.categories.insert(unit.category);
     }
-    else
-        std::cout << "Unknown category: " << category << std::endl;
 }
 
-void display_constants()
-{
-    std::cout << "Available constants:" << std::endl;
-    for (const auto& [key, value] : constants)
-        // Display available constant and note about its implementation in the program
-        std::cout << " - " << key << " " << value[1] << std::endl;
+std::string toUpper(const std::string& str) {
+    std::string upperStr = str;
+    std::transform(upperStr.begin(), upperStr.end(), upperStr.begin(), [](unsigned char c) {
+        return std::toupper(c);
+    });
+    return upperStr;
 }
 
-void display_constant(const std::string& constant)
-{
-    std::string cons = to_upper(constant);
-    if (constants.find(cons) != constants.end())
-        std::cout << constants[cons][0] << std::endl;
-    else
-        std::cout << "Unknown constant: " << constant << std::endl;
+void printUsage() {
+    std::cout << "Usage: uc [OPTIONS] <value> <from_unit> <to_unit>" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << " -h, --help         Display this help message and exit" << std::endl;
+    std::cout << " -v, --version      Display version information and exit" << std::endl;
+    std::cout << " -c                 Display available unit categories" << std::endl;
+    std::cout << " -u <unit-category> Display available units in the specified category" << std::endl;
+    std::cout << "                    Note: <unit-category> is case agnostic" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Examples:" << std::endl;
+    std::cout << " uc 10 m ft       Convert 10 meters to feet" << std::endl;
+    std::cout << " uc -c            List all available unit categories" << std::endl;
+    std::cout << " uc -u length     List all available units in the length category" << std::endl;
 }
 
-void handle_arguments(int argc, char* argv[])
-{
-    //                   User input validation:
-    // ------------------ Check for arguments ----------------------------
-    if (argc == 1)
-    {
+void uc(int argc, char* argv[], Units& u) {
+    // Check for arguments
+    if (argc == 1) {
         std::cout << "No arguments provided." << std::endl;
-        print_usage();
+        printUsage();
         return;
     }
 
-    // ------------------ Check for help option ----------------------------
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
-        print_usage();
-    // ------------------ Check for version option -------------------------
-    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)
+    // Check for help option
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+        printUsage();
+    }
+    // Check for version option
+    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) {
         std::cout << "Version 1.0" << std::endl;
-    // ------------------ Check for version option -------------------------
-    else if (strcmp(argv[1], "-c") == 0 || strcmp(argv[1], "--unit-categories") == 0)
-    {
-        if (argc == 2)
-            display_categories();
-        else
+    }
+    // Check for unit categories option
+    else if (strcmp(argv[1], "-c") == 0) {
+        if (argc == 2) {
+            u.listCategories();
+        } else {
             std::cout << "Unknown option: " << argv[2] << std::endl;
+            printUsage();
+        }
     }
-    // ---------------- Check units + unit option --------------------------
-    else if ((strcmp(argv[1], "-u") == 0 || strcmp(argv[1], "--units") == 0) && argc > 2)
-    {
-        if (argc == 3)
-            display_units(argv[2]);
-        else
+    // Check -u <unit-category> option
+    else if (strcmp(argv[1], "-u") == 0) {
+        if (argc == 3) {
+            u.listUnits(argv[2]);
+        } else if (argc < 3) {
+            std::cout << "Missing argument for -u option." << std::endl;
+            printUsage();
+        } else {
             std::cout << "Unknown option: " << argv[3] << std::endl;
+            printUsage();
+        }
     }
-    // ---------------- Check constants + CONSTANT option ------------------
-    else if ((strcmp(argv[1], "-C") == 0 || strcmp(argv[1], "--constants") == 0) && argc > 2)
-    {
-        if (argc == 3)
-            display_constant(argv[2]);
-        else
-            std::cout << "Unknown option: " << argv[3] << std::endl;
+    // Check for conversion options
+    else if (argc == 4) {
+        try {
+            double amount = std::stod(argv[1]);
+            std::string unitFrom = argv[2];
+            std::string unitTo = argv[3];
+            u.convertUnit(amount, unitFrom, unitTo);
+        } catch (const std::invalid_argument& e) {
+            std::cout << "Invalid argument: " << argv[1] << " is not a valid number." << std::endl;
+            printUsage();
+        } catch (const std::out_of_range& e) {
+            std::cout << "Out of range: " << argv[1] << " is too large or too small." << std::endl;
+            printUsage();
+        }
     }
-    // ---------------- Check constants option ----------------------------
-    // Note: This block has to match after constants + CONSTANT.
-    else if (strcmp(argv[1], "-C") == 0 || strcmp(argv[1], "--constants") == 0)
-    {
-        if (argc == 2)
-            display_constants();
-        else
-            std::cout << "Unknown option: " << argv[2] << std::endl;
-    }
-    else
-    {
-        std::cout << "Unknown or incomplete option: " << argv[1] << std::endl;
-        print_usage();
+    else {
+        std::cout << "Unknown or incomplete option." << std::endl;
+        printUsage();
     }
 }
