@@ -56,16 +56,23 @@ struct Units {
             }
         }
 
+        if (conversionFactorFrom == 0 ) {
+            std::cout << "Unknown unit: " << unitFrom << std::endl;
+            return;
+        }
+
+        if (conversionFactorTo == 0 ) {
+            std::cout << "Unknown unit: " << unitTo << std::endl;
+            return;
+        }
+
         if (unitFromBase == unitToBase) {
             double result = (amount * conversionFactorFrom)/conversionFactorTo;
             std::cout << result << std::endl;
-        } else if (conversionFactorFrom == 0 ) {
-            std::cout << "Unknown unit: " << unitFrom << std::endl;
-        } else if (conversionFactorTo == 0 ) {
-            std::cout << "Unknown unit: " << unitTo << std::endl;
-        } else {
-            std::cout << "Cannot convert between: " << unitFrom << " and " << unitTo << std::endl;
+            return;
         }
+
+        std::cout << "Cannot convert between: " << unitFrom << " and " << unitTo << std::endl;
     }
 };
 
@@ -83,7 +90,7 @@ int main(int argc, char* argv[]) {
 
 void load_conversion_units(Units& u) {
     // Load the conversion unit details from file into map
-    std::string conversion_units_file = "<path to units file>";
+    std::string conversion_units_file = "/Users/jasonarmstrong/code/jasn-armstrng/projects/unit-converter/src/units.dat";
     std::ifstream inputFile(conversion_units_file);
 
     if(!inputFile)
