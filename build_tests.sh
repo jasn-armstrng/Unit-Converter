@@ -39,7 +39,7 @@ LIBRARY_PATH="-L$GTEST_LIB_DIR"
 GTEST_LIBS="-lgtest -lgtest_main -pthread"
 
 # List of source files (excluding the main file)
-SOURCE_FILES="$SRC_DIR/constants.cpp $SRC_DIR/conversions.cpp $SRC_DIR/utilities.cpp"
+# SOURCE_FILES="$SRC_DIR/constants.cpp $SRC_DIR/conversions.cpp $SRC_DIR/utilities.cpp"
 
 # Test files
 TEST_FILES="$TEST_DIR/test_main.cpp"
@@ -48,4 +48,5 @@ TEST_FILES="$TEST_DIR/test_main.cpp"
 mkdir -p $OUTPUT_DIR
 
 # Compile and link the source files, test files, and Google Test libraries
-$CC $CFLAGS $INCLUDE_PATH $LIBRARY_PATH $SOURCE_FILES $TEST_FILES $GTEST_LIBS -o $OUTPUT_DIR/$OUTPUT_EXECUTABLE
+# $CC $CFLAGS $INCLUDE_PATH $LIBRARY_PATH $SOURCE_FILES $TEST_FILES $GTEST_LIBS -o $OUTPUT_DIR/$OUTPUT_EXECUTABLE
+$CC $CFLAGS $INCLUDE_PATH $LIBRARY_PATH $TEST_FILES $GTEST_LIBS -o $OUTPUT_DIR/$OUTPUT_EXECUTABLE

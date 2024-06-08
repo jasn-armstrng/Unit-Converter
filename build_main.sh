@@ -16,7 +16,7 @@ OUTPUT_DIR="bin"
 OUTPUT_EXECUTABLE="uc"
 
 # Compiler command
-CC="g++ -std=c++20"
+CC="g++ -std=c++11"
 
 # Compilation options (CFLAGS)
 CFLAGS="-Wall -Wextra -O2"

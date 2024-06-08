@@ -25,7 +25,8 @@ std::string toUpper(const std::string& str) {
     return upperStr;}
 
 
-void convertTemperature(double value, const std::string& fromUnit, const std::string& toUnit) {
+void convertTemperature(double& value, const std::string& fromUnit, const std::string& toUnit) {
+    std::cout << std::fixed << std::setprecision(4);
     if (fromUnit == "C")
     {   if (toUnit == "F")
         {   std::cout << value * 9.0 / 5.0 + 32.0 << std::endl;
@@ -81,7 +82,7 @@ struct Units {
         {   std::cout << "Unknown category: " << category << std::endl;}}
 
 
-    void convertUnit(double amount, const std::string& unitFrom, const std::string& unitTo) {
+    void convertUnit(double& amount, const std::string& unitFrom, const std::string& unitTo) {
         std::string unitFromBase;
         std::string unitToBase;
         double conversionFactorFrom = 0;
@@ -110,9 +111,9 @@ struct Units {
         {   convertTemperature(amount, unitFrom, unitTo);
             return;}
 
+        std::cout << std::fixed << std::setprecision(4);
         if (unitFromBase == unitToBase)
-        {   double result = (amount * conversionFactorFrom)/conversionFactorTo;
-            std::cout << result << std::endl;
+        {   std::cout << (amount * conversionFactorFrom)/conversionFactorTo << std::endl;
             return;}
 
         std::cout << "Cannot convert between: " << unitFrom << " and " << unitTo << std::endl;}};
@@ -199,9 +200,9 @@ void uc(int argc, char* argv[], Units& u) {
     {   std::cout << "Unknown or incomplete option." << std::endl;
         printUsage();}}
 
-
-int main(int argc, char* argv[]) {
-    Units allUnits;
-    loadConvertibleUnits(allUnits);
-    uc(argc, argv, allUnits);
-    return 0;}
+// Comment main when testing
+// int main(int argc, char* argv[]) {
+//     Units allUnits;
+//     loadConvertibleUnits(allUnits);
+//     uc(argc, argv, allUnits);
+//     return 0;}
