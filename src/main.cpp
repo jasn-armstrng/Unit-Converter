@@ -1,23 +1,52 @@
-/*
-uc - unit converter
+/* uc - unit converter
 
 The uc utility,
     - Converts the amount from a source unit to a target unit specified as arguments to the program.
     - See usage examples in the `printUsage()` definition below.
 
-Created by - Jason Armstrong
-*/
+Created by - Jason Armstrong */
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <unordered_set>
 #include <vector>
 
+#include "../headers/units_data.h"
+const std::string_view listOfUnits = units_data;
 
-std::string toUpper(const std::string& str);
-struct Unit;
-struct Units;
+
+std::string toUpper(const std::string& str) {
+    std::string upperStr = str;
+    std::transform(upperStr.begin(), upperStr.end(), upperStr.begin(), [](unsigned char c)
+    {   return std::toupper(c);});
+    return upperStr;}
+
+
+void convertTemperature(double value, const std::string& fromUnit, const std::string& toUnit) {
+    if (fromUnit == "C")
+    {   if (toUnit == "F")
+        {   std::cout << value * 9.0 / 5.0 + 32.0 << std::endl;
+            return;}
+        else if (toUnit == "K")
+        {   std::cout << value + 273.15 << std::endl;
+            return;}}
+    else if (fromUnit == "F")
+    {   if (toUnit == "C")
+        {   std::cout << (value - 32.0) * 5.0 / 9.0 << std::endl;
+            return;}
+        else if (toUnit == "K")
+        {   std::cout << (value + 459.67) * 5.0 / 9.0 << std::endl;
+            return;}}
+    else if (fromUnit == "K")
+    {   if (toUnit == "C")
+        {   std::cout << value - 273.15 << std::endl;
+            return;}
+        else if (toUnit == "F")
+        {   std::cout << value * 9.0 / 5.0 - 459.67 << std::endl;
+            return;}}}
 
 
 struct Unit {
@@ -29,21 +58,28 @@ struct Unit {
 
 
 struct Units {
+    // categories (lookup): The set of all unit measurement categories.
+    // units (iterator): The list of all unit objects sorted by unit category and ordered by unit conversion factor asc */
     std::unordered_set<std::string> categories;
-    std::vector<Unit> units;  // Units ordered by category and conversion factor asc
+    std::vector<Unit> units;
 
-    void listCategories() {
-        int count = 1;
-        for (auto& category: categories) {
-            std::cout << std::setw(3) << std::left << count << category << std::endl;
+    void listCategories()
+    {   int count = 1;
+        for (auto& category: categories)
+        {   std::cout << std::setw(3) << std::left << count << category << std::endl;
             count++;}}
 
-    void listUnits(const std::string& category) {
-        int count = 1;
-        for (const Unit& unit: units) {
-            if (unit.category == toUpper(category)) {
-                std::cout << std::setw(3) << std::left << count << std::setw(20) << std::left <<unit.name << unit.symbol << std::endl;
-                count++;}}}
+
+    void listUnits(const std::string& category)
+    { if (categories.count(toUpper(category)) > 0)
+        {   int count = 1;
+            for (const Unit& unit: units) {
+                if (unit.category == toUpper(category))
+                {   std::cout << std::setw(3) << std::left << count << std::setw(20) << std::left <<unit.name << unit.symbol << std::endl;
+                    count++;}}}
+        else
+        {   std::cout << "Unknown category: " << category << std::endl;}}
+
 
     void convertUnit(double amount, const std::string& unitFrom, const std::string& unitTo) {
         std::string unitFromBase;
@@ -51,56 +87,44 @@ struct Units {
         double conversionFactorFrom = 0;
         double conversionFactorTo = 0;
 
-        for (auto& unit: units) {
-            if (unit.name == unitFrom || unit.symbol == unitFrom) {
-                conversionFactorFrom = unit.conversionFactor;
+        for (auto& unit: units)
+        {   if (unit.name == unitFrom || unit.symbol == unitFrom)
+            {   conversionFactorFrom = unit.conversionFactor;
                 unitFromBase = unit.baseUnit;}
 
-            if (unit.name == unitTo || unit.symbol == unitTo) {
-                conversionFactorTo = unit.conversionFactor;
+            if (unit.name == unitTo || unit.symbol == unitTo)
+            {   conversionFactorTo = unit.conversionFactor;
                 unitToBase = unit.baseUnit;}}
 
-        if (conversionFactorFrom == 0 ) {
-            std::cout << "Unknown unit: " << unitFrom << std::endl;
+        if (conversionFactorFrom == 0)
+        {   std::cout << "Unknown unit: " << unitFrom << std::endl;
             return;}
 
-        if (conversionFactorTo == 0 ) {
-            std::cout << "Unknown unit: " << unitTo << std::endl;
+        if (conversionFactorTo == 0)
+        {   std::cout << "Unknown unit: " << unitTo << std::endl;
             return;}
 
-        if (unitFromBase == unitToBase) {
-            double result = (amount * conversionFactorFrom)/conversionFactorTo;
+        // Check first if unitFrom/unitsTo are temperature units
+        std::unordered_set<std::string> tempUnits({ "C", "F", "K" });
+        if (tempUnits.find(unitFrom) != tempUnits.end() && tempUnits.find(unitTo) != tempUnits.end())
+        {   convertTemperature(amount, unitFrom, unitTo);
+            return;}
+
+        if (unitFromBase == unitToBase)
+        {   double result = (amount * conversionFactorFrom)/conversionFactorTo;
             std::cout << result << std::endl;
             return;}
 
         std::cout << "Cannot convert between: " << unitFrom << " and " << unitTo << std::endl;}};
 
 
-void load_conversion_units(Units& u);
-void printUsage();
-void uc(int argc, char* argv[], Units& u);
-
-int main(int argc, char* argv[]) {
-    // Will need to statically compile these two
-    Units allUnits;
-    load_conversion_units(allUnits);
-
-    uc(argc, argv, allUnits);
-    return 0;}
-
-
-void load_conversion_units(Units& u) {
-    // Load the conversion unit details from file into map
-    std::string conversion_units_file = "path/to/units.dat";
-    std::ifstream inputFile(conversion_units_file);
-
-    if(!inputFile)
-        std::cout << "Failed to open " << conversion_units_file << std::endl;
-
+void loadConvertibleUnits(Units& u) {
+    // The listOfUnits.data() is a fixed column-width multiline string. Each line contains is used to create a Unit.
+    // Each unit is added to the list of units - Units.
+    std::istringstream inputStream(listOfUnits.data());
     std::string line;
-    while(std::getline(inputFile, line)) {
-        // conversion_units.dat is a fixed column-width delimited file
-        std::string category = line.substr(0,12);
+    while(std::getline(inputStream, line))
+    {   std::string category = line.substr(0,12);
         std::string name = line.substr(12,20);
         std::string symbol = line.substr(32,8);
         std::string baseUnit = line.substr(40,15);
@@ -113,17 +137,10 @@ void load_conversion_units(Units& u) {
         baseUnit.erase(baseUnit.find_last_not_of(" \t") + 1);
         conversionFactor.erase(conversionFactor.find_last_not_of(" \t") + 1);
 
-        Unit unit = {name, symbol, category, baseUnit, std::stod(conversionFactor)};
+        // Create the Unit and populate Units
+        Unit unit = { name, symbol, category, baseUnit, std::stod(conversionFactor) };
         u.units.push_back(unit);
         u.categories.insert(unit.category);}}
-
-
-std::string toUpper(const std::string& str) {
-    std::string upperStr = str;
-    std::transform(upperStr.begin(), upperStr.end(), upperStr.begin(), [](unsigned char c) {
-        return std::toupper(c);
-    });
-    return upperStr;}
 
 
 void printUsage() {
@@ -142,48 +159,49 @@ void printUsage() {
 
 
 void uc(int argc, char* argv[], Units& u) {
-    // Check for arguments
-    if (argc == 1) {
-        std::cout << "No arguments provided." << std::endl;
+    if (argc == 1)  // Check for arguments
+    {   std::cout << "No arguments provided." << std::endl;
         printUsage();
         return;}
 
-    // Check for help option
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
-        printUsage();}
-    // Check for version option
-    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) {
-        std::cout << "Version 1.0" << std::endl;}
-    // Check for unit categories option
-    else if (strcmp(argv[1], "-c") == 0) {
-        if (argc == 2) {
-            u.listCategories();}
-        else {
-            std::cout << "Unknown option: " << argv[2] << std::endl;
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)  // Check for help option
+    {   printUsage();}
+    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) // Check for version option
+    {   std::cout << "Version 1.0" << std::endl;}
+    else if (strcmp(argv[1], "-c") == 0)  // Check for unit categories option
+    {   if (argc == 2)
+        {   u.listCategories();}
+        else
+        {   std::cout << "Unknown option: " << argv[2] << std::endl;
             printUsage();}}
-    // Check -u <unit-category> option
-    else if (strcmp(argv[1], "-u") == 0) {
-        if (argc == 3) {
-            u.listUnits(argv[2]);}
-        else if (argc < 3) {
-            std::cout << "Missing argument for -u option." << std::endl;
+    else if (strcmp(argv[1], "-u") == 0)  // Check -u <unit-category> option
+    {   if (argc == 3)
+        {   u.listUnits(argv[2]);}
+        else if (argc < 3)
+        {   std::cout << "Missing argument for -u option." << std::endl;
             printUsage();}
-        else {
-            std::cout << "Unknown option: " << argv[3] << std::endl;
+        else
+        {   std::cout << "Unknown option: " << argv[3] << std::endl;
             printUsage();}}
-    // Check for conversion options
-    else if (argc == 4) {
-        try {
-            double amount = std::stod(argv[1]);
+    else if (argc == 4)  // Check for conversion options
+    {   try
+        {   double amount = std::stod(argv[1]);
             std::string unitFrom = argv[2];
             std::string unitTo = argv[3];
             u.convertUnit(amount, unitFrom, unitTo);}
-        catch (const std::invalid_argument& e) {
-            std::cout << "Invalid argument: " << argv[1] << " is not a valid number." << std::endl;
+        catch (const std::invalid_argument& e)
+        {   std::cout << "Invalid argument: " << argv[1] << " is not a valid number." << std::endl;
             printUsage();}
-        catch (const std::out_of_range& e) {
-            std::cout << "Out of range: " << argv[1] << " is too large or too small." << std::endl;
+        catch (const std::out_of_range& e)
+        {   std::cout << "Out of range: " << argv[1] << " is too large or too small." << std::endl;
             printUsage();}}
-    else {
-        std::cout << "Unknown or incomplete option." << std::endl;
+    else
+    {   std::cout << "Unknown or incomplete option." << std::endl;
         printUsage();}}
+
+
+int main(int argc, char* argv[]) {
+    Units allUnits;
+    loadConvertibleUnits(allUnits);
+    uc(argc, argv, allUnits);
+    return 0;}
