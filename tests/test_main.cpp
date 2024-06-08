@@ -16,35 +16,29 @@ static std::unordered_map<std::string, std::vector<std::vector<std::string> > > 
 {
     // Name of test                   Test Arguments                                        Expected Output
     // ---------------------------------------------------------------------------------------------------------------------------------
-    {"NoArguments",                   {{ "con" },                                           { "No arguments provided.", "Usage: con" }}},
-    {"HelpOption",                    {{ "con", "--help" },                                 { "Usage: con" }}},
-    {"HelpOptionShort",               {{ "con", "-h" },                                     { "Usage: con" }}},
-    {"VersionOption",                 {{ "con", "--version" },                              { "Version 1.0" }}},
-    {"VersionOptionShort",            {{ "con", "-v" },                                     { "Version 1.0" }}},
-    {"UnitCategoriesOption",          {{ "con", "--unit-categories" },                      { "Available unit categories:" }}},
-    {"UnitCategoriesOptionShort",     {{ "con", "-c" },                                     { "Available unit categories:" }}},
-    {"UnitCategoriesUnknownOpt",      {{ "con", "--unit-categories", "unknown" },           { "Unknown option: unknown" }}},
-    {"UnitsOption",                   {{ "con", "--units", "LENGTH" },                      { "Available units in the LENGTH category:" }}},
-    {"UnitsOptionShort",              {{ "con", "-u", "MASS" },                             { "Available units in the MASS category:" }}},
-    {"UnitsOptionUnknownOpt",         {{ "con", "--units", "LENGTH", "unknown" },           { "Unknown option: unknown" }}},
-    {"UnitsOptionUnknownCat",         {{ "con", "--units", "UNKNOWN" },                     { "Unknown category: UNKNOWN" }}},
-    {"UnitsOptionLowerCase",          {{ "con", "--units", "length" },                      { "Available units in the LENGTH category:" }}},
-    {"UnitsOptionMixedCase",          {{ "con", "--units", "LenGth" },                      { "Available units in the LENGTH category:" }}},
-    {"UnitsOptionMultiWordCategory",  {{ "con", "--units", "\"data transfer rate\"" },      { "Unknown category: \"data transfer rate\"" }}},
-    {"ConstantsOption",               {{ "con", "--constants" },                            { "Available constants:" }}},
-    {"ConstantsOptionShort",          {{ "con", "-C" },                                     { "Available constants:" }}},
-    {"ConstantsOptionUnknownOpt",     {{ "con", "--constants", "unknown" },                 { "Unknown constant: unknown" }}},
-    {"ConstantOption",                {{ "con", "--constants", "SPEED OF LIGHT" },          { "299792458" }}},
-    {"ConstantOptionShort" ,          {{ "con", "-C", "PI" },                               { "3.141592653589793" }}},
-    {"ConstantOptionShortUnknownOpt", {{ "con", "-C", "PI", "unknown" },                    { "Unknown option: unknown" }}},
-    {"ConstantOptionUnknownOpt",      {{ "con", "--constants", "TAU", "unknown" },          { "Unknown option: unknown" }}},
-    {"ConstantOptionUnknownConst",    {{ "con", "--constants", "UNKNOWN" },                 { "Unknown constant: UNKNOWN" }}},
-    {"ConstantOptionLowerCase",       {{ "con", "--constants", "speed of light" },          { "299792458" }}},
-    {"ConstantOptionMixedCase",       {{ "con", "--constants", "sPeeD oF LiGHt" },          { "299792458" }}},
-    {"ConstantOptionSingleWord",      {{ "con", "--constants", "pi" },                      { "3.141592653589793" }}},
-    {"ConstantOptionSingleWordMixed", {{ "con", "--constants", "Pi" },                      { "3.141592653589793" }}},
-    {"UnknownOption",                 {{ "con", "--unknown" },                              { "Unknown or incomplete option: --unknown", "Usage: con" }}},
-    {"IncompleteOption",              {{ "con", "--units" },                                { "Unknown or incomplete option: --units", "Usage: con" }}}
+    {"NoArguments",                   {{ "uc" },                                           { "No arguments provided.", "Usage: uc" }}},
+    {"HelpOption",                    {{ "uc", "--help" },                                 { "Usage: uc" }}},
+    {"HelpOptionShort",               {{ "uc", "-h" },                                     { "Usage: uc" }}},
+    {"VersionOption",                 {{ "uc", "--version" },                              { "Version 1.0" }}},
+    {"VersionOptionShort",            {{ "uc", "-v" },                                     { "Version 1.0" }}},
+    {"ListCategoriesOption",          {{ "uc", "-c" },                                     { "1  TEMPERATURE\n2  VOLUME\n3  DISTANCE\n4  TIME\n5  MASS\n6  AREA\n7  DATA\n" }}},
+    {"ListCategoriesUnknownOption",   {{ "uc", "-c", "unknown" },                          { "Unknown option: unknown", "Usage: uc" }}},
+    {"ListUnitsOption",               {{ "uc", "-u", "distance" },                         { "1  Meter               m\n2  Kilometer           km\n3  Centimeter          cm\n4  Millimeter          mm\n5  Micrometer          μm\n6  Nanometer           nm\n7  Inch                in\n8  Foot                ft\n9  Yard                yd\n10 Mile                mi\n" }}},
+    {"ListUnitsOptionUppercase",      {{ "uc", "-u", "DISTANCE" },                         { "1  Meter               m\n2  Kilometer           km\n3  Centimeter          cm\n4  Millimeter          mm\n5  Micrometer          μm\n6  Nanometer           nm\n7  Inch                in\n8  Foot                ft\n9  Yard                yd\n10 Mile                mi\n" }}},
+    {"ListUnitsOptionMissingArg",     {{ "uc", "-u" },                                     { "Missing argument for -u option.", "Usage: uc" }}},
+    {"ListUnitsOptionUnknownUnit",    {{ "uc", "-u", "unknown" },                          { "Unknown category: unknown" }}},
+    {"ListUnitsOptionExtraArg",       {{ "uc", "-u", "length", "extra" },                  { "Unknown option: extra", "Usage: uc" }}},
+    {"ConvertUnitLength",             {{ "uc", "10", "m", "ft" },                          { "32.8084" }}},
+    {"ConvertUnitMass",               {{ "uc", "1", "kg", "lb" },                          { "2.2046" }}},
+    {"ConvertUnitTemperature",        {{ "uc", "100", "C", "F" },                          { "212.0000" }}},
+    {"ConvertUnitInvalidValue",       {{ "uc", "invalid", "m", "ft" },                     { "Invalid argument: invalid is not a valid number.", "Usage: uc" }}},
+    {"ConvertUnitLargeValue",         {{ "uc", "1e100", "m", "ft" },                       { "32808398950131232914215958810306863119312337781052860287712980133542969684475715558098231427537567744.0000" }}},
+    {"ConvertUnitUnknownFromUnit",    {{ "uc", "10", "unknown", "ft" },                    { "Unknown unit: unknown" }}},
+    {"ConvertUnitUnknownToUnit",      {{ "uc", "10", "m", "unknown" },                     { "Unknown unit: unknown" }}},
+    {"ConvertUnitIncompatibleUnits",  {{ "uc", "10", "m", "g" },                           { "Cannot convert between: m and g" }}},
+    {"ConvertUnitExtraArgument",      {{ "uc", "10", "m", "ft", "extra" },                 { "Unknown or incomplete option.", "Usage: uc" }}},
+    {"UnknownOption",                 {{ "uc", "--unknown" },                              { "Unknown or incomplete option.", "Usage: uc" }}},
+    {"IncompleteOption",              {{ "uc", "-" },                                      { "Unknown or incomplete option.", "Usage: uc" }}}
 };
 
 // Helper function to convert a vector of strings to an array of C-strings
@@ -62,12 +56,12 @@ std::vector<char*> create_argv(const std::vector<std::string>& args)
 }
 
 // Helper function to reuse the TEST internals
-bool run_test_case(const std::string& test_name, const std::vector<std::string>& args, const std::string& expected_output)
+bool run_test_case(const std::string& test_name, const std::vector<std::string>& args, const std::string& expected_output, Units& u)
 {
     auto argv = create_argv(args);
 
     testing::internal::CaptureStdout();
-    handle_arguments(args.size(), argv.data());
+    uc(args.size(), argv.data(), u);
     std::string output = testing::internal::GetCapturedStdout();
 
     for (char* arg : argv)
@@ -89,6 +83,9 @@ TEST(UnitsTest, AllTestCases)
     std::size_t total_tests = test_cases.size();
     int test_counter = 0;
 
+    Units allUnits;
+    loadConvertibleUnits(allUnits);
+
     for (const auto& test_case : test_cases)
     {
         const std::string& test_name = test_case.first;
@@ -98,7 +95,7 @@ TEST(UnitsTest, AllTestCases)
         const std::string run = std::format("\033[32m[ RUN      ]\033[0m - {}", test_name);
         std::cout << run << std::endl;
 
-        bool test_passed = run_test_case(test_name, args, expected_output);
+        bool test_passed = run_test_case(test_name, args, expected_output, allUnits);
         if (test_passed)
         {
             test_counter++;
