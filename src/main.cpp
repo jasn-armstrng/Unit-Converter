@@ -116,6 +116,18 @@ CHEMISTRY       First Radiation Constant       c1          3.741771852e-16     W
 CHEMISTRY       Second Radiation Constant      c2          1.438776877e-2      m*K)";
 
 
+bool isQuoted(const std::string& str) {
+    if (str.length() >= 2) {
+        char firstChar = str.front();
+        char lastChar = str.back();
+        if ((firstChar == '"' && lastChar == '"') || (firstChar == '\'' && lastChar == '\'')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 std::string toUpper(const std::string& str) {
     std::string upperStr = str;
     std::transform(upperStr.begin(), upperStr.end(), upperStr.begin(), [](unsigned char c) {
@@ -274,7 +286,7 @@ void loadUnits(Units& u) {
 //     Defines structs and functions for managing a collection of physical constants.
 //         - The Constant struct represents a single physical constant with its name, symbol, group, value, and unit.
 //         - The Constants struct contains a set of unique groups and a map of constants, along with methods to list groups,
-//         - list constants within a group, and retrieve the value of a specific constant.
+//           list constants within a group, list all constants, and retrieve the value of a specific constant.
 //         - The loadConstants function populates a Constants object from a fixed column-width multiline string, extracting
 //             and storing the data for each constant.
 struct Constant {
@@ -375,8 +387,8 @@ void printUsage() {
     std::cout << "                    Note: <category> is case agnostic" << std::endl;
     std::cout << std::endl;
     std::cout << " Constants:" << std::endl;
-    std::cout << " -g                 Display available constant groups" << std::endl;
-    std::cout << " -C                 Display detailed view of all available constants" << std::endl;
+    std::cout << " -Cg                Display available constant groups" << std::endl;
+    std::cout << " -Cd                Display detailed view of all available constants" << std::endl;
     std::cout << " -C <group>         Display available constants in the specified group" << std::endl;
     std::cout << "                    Note: <group> is case agnostic" << std::endl;
 }
@@ -391,13 +403,13 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
     }
 
     // -----------------------------------------------------------------------------------------------------
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)               // Check for help option
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)             // Show help/program usage
         printUsage();
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)     // Check for version option
+    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)          // Show version number
         std::cout << "Version 1.0" << std::endl;
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-c") == 0) {                                // Check for unit categories option
+    else if (strcmp(argv[1], "-c") == 0) {                                            // List unit categories
         if (argc == 2)
             u.listCategories();
         else {
@@ -406,7 +418,7 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         }
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-u") == 0) {                                      // Check -u <category> option
+    else if (strcmp(argv[1], "-u") == 0) {                               // List units for specified category
         if (argc == 3)
             u.listUnits(argv[2]);
         else if (argc < 3) {
@@ -418,7 +430,7 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         }
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (argc == 4) {                                                     // Check for conversion options
+    else if (argc == 4) {                                                          // Convert valid statement
         try {
             double amount = std::stod(argv[1]);
             std::string unitFrom = argv[2];
@@ -433,7 +445,7 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         }
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-g") == 0) {                            // Check for constants categorie option
+    else if (strcmp(argv[1], "-Cg") == 0) {                                          // List constants groups
         if (argc == 2)
             c.listGroups();
         else {
@@ -442,7 +454,7 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         }
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-C") == 0) {                                         // Check -C <group> option
+    else if (strcmp(argv[1], "-C") == 0) {                            // List constants in for specfied group
         if (argc == 3)
             c.listConstants(argv[2]);
         else if (argc < 3) {
@@ -454,7 +466,7 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         }
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-Cd") == 0) {                                                 // Check -C option
+    else if (strcmp(argv[1], "-Cd") == 0) {                                    // List all constants (detail)
         if (argc == 2)
             c.listConstantsDetailed();
         else {
@@ -463,7 +475,7 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         }
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (argc == 2) {                                                 // Check for constant value request
+    else if (argc == 2 && isQuoted(argv[1])) {                       // Show value of valid constant provided
         try {
             c.valueOfConstant(argv[1]);
         } catch (const std::invalid_argument& e) {
