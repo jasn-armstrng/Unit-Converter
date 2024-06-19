@@ -116,13 +116,10 @@ CHEMISTRY       First Radiation Constant       c1          3.741771852e-16     W
 CHEMISTRY       Second Radiation Constant      c2          1.438776877e-2      m*K)";
 
 
-bool isQuoted(const std::string& str) {
+bool isSwitch(const std::string& str) {
     if (str.length() >= 2) {
         char firstChar = str.front();
-        char lastChar = str.back();
-        if ((firstChar == '"' && lastChar == '"') || (firstChar == '\'' && lastChar == '\'')) {
-            return true;
-        }
+        return firstChar == '-' ? true : false;
     }
     return false;
 }
@@ -475,7 +472,7 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         }
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (argc == 2 && isQuoted(argv[1])) {                       // Show value of valid constant provided
+    else if (argc == 2 && !isSwitch(argv[1])) {                      // Show value of valid constant provided
         try {
             c.valueOfConstant(argv[1]);
         } catch (const std::invalid_argument& e) {
