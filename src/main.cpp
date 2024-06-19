@@ -4,6 +4,10 @@
 //         - Prints the value of constants in Chemistry, Mathematics, and Physics.
 //         - See usage examples in the `printUsage()` definition below.
 // Created by - Jason Armstrong
+//
+// "You shall do no injustice in judgment, in measurement of length, weight, or volume.
+// You shall have honest scales, honest weights, an honest ephah, and an honest hin ..."
+// - Leviticus 19:35-36 NKJV
 
 #include <algorithm>
 #include <fstream>
