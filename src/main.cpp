@@ -1,13 +1,19 @@
-// uc - unit converter
-//     The uc utility,
-//         - Converts the amount from a source unit to a target unit specified as arguments to the program.
-//         - Prints the value of constants in Chemistry, Mathematics, and Physics.
-//         - See usage examples in the `printUsage()` definition below.
-// Created by - Jason Armstrong
-//
-// "You shall do no injustice in judgment, in measurement of length, weight, or volume.
-// You shall have honest scales, honest weights, an honest ephah, and an honest hin ..."
-// - Leviticus 19:35-36 NKJV
+/*
+uc - unit converter
+    The uc utility,
+        - Converts the amount from a source unit to a target unit specified as arguments to the program.
+        - Provides the value of constants in Chemistry, Mathematics, and Physics.
+        - See usage examples in the `printUsage()` definition below.
+        
+Created by - Jason Armstrong
+
+                               You shall do no injustice in judgment, 
+                            in measurement of length, weight, or volume.
+                                   You shall have honest scales, 
+                                  honest weights, an honest ephah, 
+                                       and an honest hin ...
+                                    - Leviticus 19:35-36 NKJV
+*/
 
 #include <algorithm>
 #include <fstream>
@@ -168,15 +174,16 @@ void convertTemperature(double& value, const std::string& fromUnit, const std::s
         return;
 }
 
-
-// Units Section:
-//     Defines structs and functions for managing units of measurement and performing unit conversions.
-//         - The Unit struct represents a single unit with its name, symbol, category, base unit, and conversion factor.
-//         - The Units struct contains a set of unique categories and a vector of units, along with methods to list categories,
-//           list units within a category, and convert between units.
-//         - The loadUnits function populates a Units object from a fixed column-width multiline string, extracting and storing
-//           the data for each unit. The convertUnit method converts an amount from one unit to another, handling special cases
-//           for temperature units and checking for compatibility between units.
+/*
+Units Section:
+    Defines structs and functions for managing units of measurement and performing unit conversions.
+        - The Unit struct represents a single unit with its name, symbol, category, base unit, and conversion factor.
+        - The Units struct contains a set of unique categories and a vector of units, along with methods to list categories,
+          list units within a category, and convert between units.
+        - The loadUnits function populates a Units object from a fixed column-width multiline string, extracting and storing
+          the data for each unit. The convertUnit method converts an amount from one unit to another, handling special cases
+          for temperature units and checking for compatibility between units.
+*/
 struct Unit {
     std::string name;
     std::string symbol;
@@ -282,14 +289,15 @@ void loadUnits(Units& u) {
     }
 }
 
-
-// Constants Section:
-//     Defines structs and functions for managing a collection of physical constants.
-//         - The Constant struct represents a single physical constant with its name, symbol, group, value, and unit.
-//         - The Constants struct contains a set of unique groups and a map of constants, along with methods to list groups,
-//           list constants within a group, list all constants, and retrieve the value of a specific constant.
-//         - The loadConstants function populates a Constants object from a fixed column-width multiline string, extracting
-//             and storing the data for each constant.
+/*
+Constants Section:
+    Defines structs and functions for managing a collection of physical constants.
+        - The Constant struct represents a single physical constant with its name, symbol, group, value, and unit.
+        - The Constants struct contains a set of unique groups and a map of constants, along with methods to list groups,
+          list constants within a group, list all constants, and retrieve the value of a specific constant.
+        - The loadConstants function populates a Constants object from a fixed column-width multiline string, extracting
+            and storing the data for each constant.
+*/
 struct Constant {
     std::string name;
     std::string symbol;
@@ -489,7 +497,6 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
 }
 
 
-// Comment main when testing
 int main(int argc, char* argv[]) {
     Units allUnits;
     loadUnits(allUnits);
@@ -501,4 +508,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-// -----------------------------------------------------------------------------------------------------------
