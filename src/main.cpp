@@ -4,18 +4,21 @@ uc - unit converter
         - Converts the amount from a source unit to a target unit specified as arguments to the program.
         - Provides the value of constants in Chemistry, Mathematics, and Physics.
         - See usage examples in the `printUsage()` definition below.
-        
+
 Created by - Jason Armstrong
 
-                               You shall do no injustice in judgment, 
+                               You shall do no injustice in judgment,
                             in measurement of length, weight, or volume.
-                                   You shall have honest scales, 
-                                  honest weights, an honest ephah, 
-                                       and an honest hin ...
+                                   You shall have honest scales,
+                                  honest weights, an honest ephah,
+                                       and an honest hin,
+                                               ...
                                     - Leviticus 19:35-36 NKJV
 */
 
+#include <_ctype.h>
 #include <algorithm>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -23,13 +26,11 @@ Created by - Jason Armstrong
 #include <string>
 #include <sstream>
 #include <string_view>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 
-const std::string_view listOfUnits =
-R"(DATA        Bit                 b       Bit            1
+const std::string_view listOfUnits = R"(DATA        Bit                 b       Bit            1
 DATA        Byte                B       Bit            8
 DATA        Kilobit             kbit    Bit            1000
 DATA        Kibibit             Kib     Bit            1024
@@ -93,8 +94,7 @@ TEMPERATURE fahrenheit          F       Celsius        1
 TEMPERATURE kelvin              K       Celsius        1)";
 
 
-const std::string_view listOfConstants =
-R"(MATHEMATICS     Pi                             pi          3.141592653589793   -
+const std::string_view listOfConstants = R"(MATHEMATICS     Pi                             pi          3.141592653589793   -
 MATHEMATICS     Eulers Number                  e           2.718281828459045   -
 MATHEMATICS     Golden Ratio                   phi         1.618033988749895   -
 MATHEMATICS     Square Root of 2               root2       1.414213562373095   -
@@ -126,17 +126,14 @@ CHEMISTRY       First Radiation Constant       c1          3.741771852e-16     W
 CHEMISTRY       Second Radiation Constant      c2          1.438776877e-2      m*K)";
 
 
-bool isSwitch(const std::string& str) {
-    if (str.length() >= 2) {
-        char firstChar = str.front();
-        return firstChar == '-' ? true : false;
-    }
-    return false;
+bool isSwitch(const std::string& input) {
+    char firstChar = input.front();
+    return firstChar == '-' ? true : false;
 }
 
 
-std::string toUpper(const std::string& str) {
-    std::string upperStr = str;
+std::string toUpper(const std::string& input) {
+    std::string upperStr = input;
     std::transform(upperStr.begin(), upperStr.end(), upperStr.begin(), [](unsigned char c) {
         return std::toupper(c);
     });
@@ -197,27 +194,23 @@ struct Units {
     std::vector<Unit> units;
 
     void listCategories() {
-        int count = 1;
         for (auto& category: categories) {
-            std::cout << std::setw(3) << std::left << count << category << std::endl;
-            count++;
+            std::cout << std::left << category << std::endl;
         }
     }
 
-    void listUnits(const std::string& category) {
-        if (categories.count(toUpper(category)) > 0) {
-        int count = 1;
+    void listUnits(const std::string& input) {
+        if (categories.count(toUpper(input)) > 0) {
             for (const Unit& unit: units) {
-                if (unit.category == toUpper(category)) {
-                    std::cout << std::setw(3) << std::left << count
+                if (unit.category == toUpper(input)) {
+                    std::cout << std::left
                     << std::setw(20) << unit.name
                     << std::setw(8) << unit.symbol << std::endl;
-                    count++;
                 }
             }
         }
         else
-            std::cout << "Unknown category: " << category << std::endl;
+            std::cout << "Unknown category: " << input << std::endl;
     }
 
     void convertUnit(double& amount, const std::string& unitFrom, const std::string& unitTo) {
@@ -265,9 +258,10 @@ struct Units {
 };
 
 
-void loadUnits(Units& u) {
+Units loadUnits() {
     std::istringstream inputStream(listOfUnits.data());
     std::string line;
+    Units U;
     while(std::getline(inputStream, line)) {
         std::string category = line.substr(0,12);
         std::string name = line.substr(12,20);
@@ -284,9 +278,10 @@ void loadUnits(Units& u) {
 
         // Create the Unit and populate Units
         Unit unit = { name, symbol, category, baseUnit, std::stod(conversionFactor) };
-        u.units.push_back(unit);
-        u.categories.insert(unit.category);
+        U.units.push_back(unit);
+        U.categories.insert(unit.category);
     }
+    return U;
 }
 
 /*
@@ -309,59 +304,59 @@ struct Constant {
 
 struct Constants {
     std::unordered_set<std::string> groups;
-    std::unordered_map<std::string, Constant> constants;
+    std::vector<Constant> constants;
 
     void listGroups() {
-        int count = 1;
         for (auto& group: groups) {
-            std::cout << std::setw(3) << std::left << count << group << std::endl;
-            count++;
+            std::cout << std::setw(3) << std::left << group << std::endl;
         }
     }
 
-    void listConstants(const std::string& group) {
-        if (groups.count(toUpper(group)) > 0) {
-            int count = 1;
-            for (const auto& pair: constants) {
-                if (pair.second.group == toUpper(group)) {
-                    std::cout << std::left << std::setw(3) << count
-                        << std::setw(31) << pair.second.name
-                        << std::setw(8) << pair.second.symbol << std::endl;
-                    count++;
+    void listConstants(const std::string& input) {
+        if (groups.count(toUpper(input)) > 0) {
+            for (const auto& constant: constants) {
+                if (constant.group == toUpper(input)) {
+                    std::cout << std::left
+                        << std::setw(31) << constant.name
+                        << std::setw(8) << constant.symbol << std::endl;
                 }
             }
         }
         else
-            std::cout << "Unknown group: " << group << std::endl;
+            std::cout << "Unknown group: " << input << std::endl;
     }
 
     void listConstantsDetailed() {
         for (auto& group: groups) {
-            for (const auto& pair: constants) {
-                if (pair.second.group == group) {
-                    std::cout << std::left << std::setw(16) << pair.second.group
-                            << std::setw(32) << pair.second.name
-                            << std::setw(12) << pair.second.symbol
-                            << std::setw(20) << pair.second.value
-                            << std::setw(20) << pair.second.unit << std::endl;
+            for (const auto& constant: constants) {
+                if (constant.group == group) {
+                    std::cout << std::left << std::setw(16) << constant.group
+                            << std::setw(32) << constant.name
+                            << std::setw(12) << constant.symbol
+                            << std::setw(20) << constant.value
+                            << std::setw(20) << constant.unit << std::endl;
                 }
             }
         }
     }
 
-    void valueOfConstant(const std::string& constant)
-    {   std::cout << std::fixed << std::setprecision(15);
-        if (constants.find(constant) == constants.end())
-            std::cout << "Unknown constant: " << constant << std::endl;
-        else
-            std::cout << constants[constant].value << std::endl;
+    void valueOfConstant(const std::string& input) {
+        std::cout << std::fixed << std::setprecision(15);
+        for (const auto& constant: constants) {
+            if (toUpper(constant.name) == toUpper(input) || constant.symbol == input) {
+                std::cout << constant.value << std::endl;
+                return;
+            }
+        }
+        std::cout << "Unknown constant: " << input << std::endl;
     }
 };
 
 
-void loadConstants(Constants& c) {
+Constants loadConstants() {
     std::istringstream inputStream(listOfConstants.data());
     std::string line;
+    Constants C;
     while(std::getline(inputStream, line)) {
         std::string group = line.substr(0,16);
         std::string name = line.substr(16,31);
@@ -378,9 +373,10 @@ void loadConstants(Constants& c) {
 
         // Create the Unit and populate Units
         Constant constant = { name, symbol, group, value, unit };
-        c.constants.insert({constant.name, constant});
-        c.groups.insert(constant.group);
+        C.constants.push_back(constant);
+        C.groups.insert(constant.group);
     }
+    return C;
 }
 
 
@@ -418,6 +414,44 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
     else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)          // Show version number
         std::cout << "Version 1.0" << std::endl;
     // ------------------------------------------------------------------------------------------------------
+    else if (strcmp(argv[1], "-Cg") == 0) {                                          // List constants groups
+        if (argc == 2)
+            c.listGroups();
+        else {
+            std::cout << "Unknown option: " << argv[2] << std::endl;
+            printUsage();
+        }
+    }
+    // ------------------------------------------------------------------------------------------------------
+    else if (strcmp(argv[1], "-C") == 0) {                               // List constants for specfied group
+        if (argc == 3)
+            c.listConstants(argv[2]);
+        else if (argc < 3) {
+            std::cout << "Missing argument for -C option." << std::endl;
+            printUsage();}
+        else {
+            std::cout << "Unknown option: " << argv[3] << std::endl;
+            printUsage();
+        }
+    }
+    // ------------------------------------------------------------------------------------------------------
+    else if (strcmp(argv[1], "-Cd") == 0) {                             // List all details for all constants
+        if (argc == 2)
+            c.listConstantsDetailed();
+        else {
+            std::cout << "Unknown option: " << argv[2] << std::endl;
+            printUsage();
+        }
+    }
+    // ------------------------------------------------------------------------------------------------------
+    else if (argc == 2 && !isSwitch(argv[1])) {                      // Show value of valid constant provided
+        try {
+            c.valueOfConstant(argv[1]);
+        } catch (const std::invalid_argument& e) {
+            printUsage();
+        }
+    }
+    // ------------------------------------------------------------------------------------------------------
     else if (strcmp(argv[1], "-c") == 0) {                                            // List unit categories
         if (argc == 2)
             u.listCategories();
@@ -452,44 +486,6 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
             std::cout << "Out of range: " << argv[1] << " is too large or too small." << std::endl;
             printUsage();
         }
-    }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-Cg") == 0) {                                          // List constants groups
-        if (argc == 2)
-            c.listGroups();
-        else {
-            std::cout << "Unknown option: " << argv[2] << std::endl;
-            printUsage();
-        }
-    }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-C") == 0) {                            // List constants in for specfied group
-        if (argc == 3)
-            c.listConstants(argv[2]);
-        else if (argc < 3) {
-            std::cout << "Missing argument for -C option." << std::endl;
-            printUsage();}
-        else {
-            std::cout << "Unknown option: " << argv[3] << std::endl;
-            printUsage();
-        }
-    }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-Cd") == 0) {                                    // List all constants (detail)
-        if (argc == 2)
-            c.listConstantsDetailed();
-        else {
-            std::cout << "Unknown option: " << argv[2] << std::endl;
-            printUsage();
-        }
-    }
-    // ------------------------------------------------------------------------------------------------------
-    else if (argc == 2 && !isSwitch(argv[1])) {                      // Show value of valid constant provided
-        try {
-            c.valueOfConstant(argv[1]);
-        } catch (const std::invalid_argument& e) {
-            printUsage();
-        }
     } else {
         std::cout << "Unknown or incomplete option." << std::endl;
         printUsage();
@@ -498,11 +494,8 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
 
 
 int main(int argc, char* argv[]) {
-    Units allUnits;
-    loadUnits(allUnits);
-
-    Constants allConstants;
-    loadConstants(allConstants);
+    Units allUnits = loadUnits();
+    Constants allConstants = loadConstants();
 
     uc(argc, argv, allUnits, allConstants);
 

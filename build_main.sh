@@ -19,7 +19,7 @@ OUTPUT_EXECUTABLE="uc"
 CC="g++ -std=c++20"
 
 # Compilation options (CFLAGS)
-CFLAGS="-Wall -Wextra -O2"
+CFLAGS="-Wpedantic -Wall -Wextra -Wconversion -O3"
 
 # Include path for header files
 INCLUDE_PATH="-I$HEADER_DIR"
