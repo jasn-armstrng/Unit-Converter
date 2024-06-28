@@ -4,44 +4,56 @@ NAME
        uc - (measurement) unit converter
 
 SYNOPSIS
-       uc [-Cchv] [-u category] [-C constant] <amount> <unit_from> <unit_to>
+       uc <amount> <unit_from> <unit_to>, uc <constant>
 
 DESCRIPTION
        The uc utility,
         1. Reads the units to convert between and the value(s) to be converted from the
            standard input, and perfoms the conversion(s). The result(s) are then written
            to the standard output.
-        2. Reads the constant specified from the standard input. The value of the constant
-           is then written to the standard output.
+        2. Reads the constant specified from the standard input. The value of the const-
+           ant is then written to the standard output.
 
 OPTIONS
-       -h, --help
-              Display the help message and exit.
+        -h, --help
+            Display the help message and exit.
 
-       -v, --version
-              Display version information and exit.
+        -v, --version
+            Display version information and exit.
 
-       -c, --categories
-              Display available unit categories.
+        -c
+            Display available unit categories.
 
-       -u, --units <category>
-              Display available units in the specified category.
+        -u <category> (Case agnostic)
+            Display available units in the specified category.
 
-       -C, --constants
-              Display available constants.
+        -Cg
+            Display available contants groups.
 
-       -C, --constants <constant>
-              Display the value of the specified constant.
+        -Cd
+            Display all details for all constants
+
+        -C <group> (Case agnostic)
+            Display available constants in the specified group.
 
 ARGUMENTS
-       <source_unit>
-              [Explain the purpose and format of the source_unit argument]
+        <constant>
+            A valid constant name or symbol. A multi-worded constant name must
+            be quoted e.g. "Electron Rest Mass". Names of contants are evaluated
+            case-agnostic, but symbols are not.
 
-       <target_unit>
-              [Explain the purpose and format of the target_unit argument]
+        <source_unit>
+            The unit being converted from. The proper unit symbol must be entered
+            e.g. km (Kilometer), mi (Mile), MB (Megabyte), as it is not evaluated
+            case agnostically.
 
-       <value1> <value2> ...
-              [Explain the purpose and format of the value arguments]
+        <target_unit>
+            The unit being converted to. The proper unit symbol must be entered
+            e.g. km (Kilometer), mi (Mile), MB (Megabyte), as it is not evaluated
+            case agnostically.
+
+        <value1>
+            Must be either an integer or floating point value.
 
 EXAMPLES
        Arguments to options are case insensitive; the below are all valid:
@@ -49,12 +61,13 @@ EXAMPLES
             $ uc -u LENGTH
             $ uc -u length
             $ uc -u LenGth
-            $ uc -C taU
-            $ uc -C PHI
+            $ uc taU
+            $ uc tau
+            $ uc TAU
 
-       Use quotes for arguments to options that contain spaces:
+       Use quotes for constant arguments that contain spaces:
 
-            $ uc -C "SPEED OF LIGHT"
+            $ uc "SPEED OF LIGHT"
 
        Conversions:
 
