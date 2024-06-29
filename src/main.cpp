@@ -210,6 +210,41 @@ void writeHistory(const std::string& conversionRequest, const double& result) {
 }
 
 
+void displayHistory() {
+    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
+
+    if (!std::filesystem::exists(historyPath)) {
+        std::cout << "No conversion history found." << std::endl;
+        return;
+    }
+
+    std::ifstream historyFile(historyPath);
+    if (!historyFile.is_open()) {
+        std::cout << "Unable to open history file." << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(historyFile, line))
+        std::cout << line << std::endl;
+
+    historyFile.close();
+}
+
+
+void clearHistory() {
+    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME")) / ".uc_history";
+
+    if (std::filesystem::exists(historyPath)) {
+        std::ofstream ofs(historyPath, std::ios::trunc);
+        ofs.close();
+        std::cout << "Conversion history cleared." << std::endl;
+    } else {
+        std::cout << "No history file found. Nothing to clear." << std::endl;
+    }
+}
+
+
 /*
 Units Section:
     Defines structs and functions for managing units of measurement and performing unit conversions.
@@ -439,6 +474,11 @@ void printUsage() {
     std::cout << " -Cd                Display detailed view of all available constants" << std::endl;
     std::cout << " -C <group>         Display available constants in the specified group" << std::endl;
     std::cout << "                    Note: <group> is case agnostic" << std::endl;
+    std::cout << std::endl;
+    std::cout << " Conversion history:" << std::endl;
+    std::cout << " --hist             Display conversion history from all time. Manage history" << std::endl;
+    std::cout << "                    with head, tail, or grep commands." << std::endl;
+    std::cout << " --clrhist          Clear conversion history" << std::endl;
 }
 
 
@@ -449,13 +489,22 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         printUsage();
         return;
     }
-
     // -----------------------------------------------------------------------------------------------------
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)             // Show help/program usage
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {             // Show help/program usage
         printUsage();
+    }
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)          // Show version number
+    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) {          // Show version number
         std::cout << "Version 1.0" << std::endl;
+    }
+    // ------------------------------------------------------------------------------------------------------
+    else if (argc == 2 && std::string(argv[1]) == "--hist") {                         // Show conversion history
+        displayHistory();
+    }
+    // ------------------------------------------------------------------------------------------------------
+    else if (argc == 2 && std::string(argv[1]) == "--clrhist") {                         // Show conversion history
+        clearHistory();
+    }
     // ------------------------------------------------------------------------------------------------------
     else if (strcmp(argv[1], "-Cg") == 0) {                                          // List constants groups
         if (argc == 2)
@@ -536,11 +585,11 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
 }
 
 
-// int main(int argc, char* argv[]) {
-//     Units allUnits = loadUnits();
-//     Constants allConstants = loadConstants();
+int main(int argc, char* argv[]) {
+    Units allUnits = loadUnits();
+    Constants allConstants = loadConstants();
 
-//     uc(argc, argv, allUnits, allConstants);
+    uc(argc, argv, allUnits, allConstants);
 
-//     return 0;
-// }
+    return 0;
+}
