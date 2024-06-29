@@ -18,10 +18,15 @@ Created by - Jason Armstrong
 
 #include <_ctype.h>
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <fstream>
+#include <filesystem>
+#include <format>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <ostream>
 #include <string>
 #include <sstream>
@@ -141,35 +146,69 @@ std::string toUpper(const std::string& input) {
 }
 
 
-void convertTemperature(double& value, const std::string& fromUnit, const std::string& toUnit) {
-    std::cout << std::fixed << std::setprecision(4);
+double convertTemperature(double value, const std::string& fromUnit, const std::string& toUnit) {
+    const double ABSOLUTE_ZERO_C = -273.15;
+    const double ABSOLUTE_ZERO_F = -459.67;
+
+    // Convert to Kelvin first
+    double kelvin;
     if (fromUnit == "C") {
-        if (toUnit == "F") {
-            std::cout << value * 9.0 / 5.0 + 32.0 << std::endl;
-            return;
-        } else if (toUnit == "K") {
-            std::cout << value + 273.15 << std::endl;
-            return;
-        }
+        kelvin = value - ABSOLUTE_ZERO_C;
     } else if (fromUnit == "F") {
-        if (toUnit == "C") {
-            std::cout << (value - 32.0) * 5.0 / 9.0 << std::endl;
-            return;
-        } else if (toUnit == "K") {
-            std::cout << (value + 459.67) * 5.0 / 9.0 << std::endl;
-            return;
-        }
+        kelvin = (value - ABSOLUTE_ZERO_F) * 5.0 / 9.0;
     } else if (fromUnit == "K") {
-        if (toUnit == "C") {
-            std::cout << value - 273.15 << std::endl;
-            return;
-        } else if (toUnit == "F") {
-            std::cout << value * 9.0 / 5.0 - 459.67 << std::endl;
-            return;
-        }
-    } else
-        return;
+        kelvin = value;
+    } else {
+        throw std::invalid_argument("Invalid fromUnit: " + fromUnit);
+    }
+
+    // Convert from Kelvin to target unit
+    if (toUnit == "C") {
+        return kelvin + ABSOLUTE_ZERO_C;
+    } else if (toUnit == "F") {
+        return kelvin * 9.0 / 5.0 + ABSOLUTE_ZERO_F;
+    } else if (toUnit == "K") {
+        return kelvin;
+    } else {
+        throw std::invalid_argument("Invalid toUnit: " + toUnit);
+    }
 }
+
+
+void writeHistory(const std::string& conversionRequest, const double& result) {
+    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
+
+    double index = 0;
+    try {
+        // First, if file exists, read the number of lines
+        if (std::filesystem::exists(historyPath)) {
+            std::ifstream countFile;
+            countFile.open(historyPath);
+            if (countFile.is_open()) {
+                index = std::count(std::istreambuf_iterator<char>(countFile), std::istreambuf_iterator<char>(), '\n');
+                countFile.close();
+            }
+        }
+
+        // Now, append conversion request to the history
+        std::ofstream historyFile(historyPath, std::ios::app);
+        if (!historyFile.is_open())
+            throw std::runtime_error("Unable to open history file");
+
+        historyFile << ++index << " uc " << conversionRequest << " " << result << std::endl;
+
+        if (historyFile.fail())
+            throw std::runtime_error("Unable to write to history file");
+
+        historyFile.close();
+    } catch (const std::exception& e) {
+        std::ofstream errorLog("~/.uc_error.log", std::ios::app);
+        if (errorLog.is_open()) {
+            errorLog << "Error writing to history" << e.what() << std::endl;
+        }
+    }
+}
+
 
 /*
 Units Section:
@@ -243,13 +282,17 @@ struct Units {
         // Check first if unitFrom/unitsTo are temperature units
         std::unordered_set<std::string> tempUnits({ "C", "F", "K" });
         if (tempUnits.find(unitFrom) != tempUnits.end() && tempUnits.find(unitTo) != tempUnits.end()) {
-            convertTemperature(amount, unitFrom, unitTo);
+            double result = convertTemperature(amount, unitFrom, unitTo);
+            std::cout << std::fixed << std::setprecision(4) << result << std::endl;
+            writeHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
             return;
         }
 
         std::cout << std::fixed << std::setprecision(4);
         if (unitFromBase == unitToBase) {
-            std::cout << (amount * conversionFactorFrom)/conversionFactorTo << std::endl;
+            double result = (amount * conversionFactorFrom)/conversionFactorTo;
+            std::cout << std::fixed << std::setprecision(4) << result << std::endl;
+            writeHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
             return;
         }
 
@@ -493,11 +536,11 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
 }
 
 
-int main(int argc, char* argv[]) {
-    Units allUnits = loadUnits();
-    Constants allConstants = loadConstants();
+// int main(int argc, char* argv[]) {
+//     Units allUnits = loadUnits();
+//     Constants allConstants = loadConstants();
 
-    uc(argc, argv, allUnits, allConstants);
+//     uc(argc, argv, allUnits, allConstants);
 
-    return 0;
-}
+//     return 0;
+// }

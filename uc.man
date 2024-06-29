@@ -74,6 +74,7 @@ EXAMPLES
             $ uc 5 meters feet
             $ uc 2500 KB MB
             $ uc 10.25 l gal
+            $ uc 50 C F
 
 EXIT STATUS
        The uc utility exits 0 on success, and >0 if an error occurs.
