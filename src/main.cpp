@@ -18,10 +18,15 @@ Created by - Jason Armstrong
 
 #include <_ctype.h>
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <fstream>
+#include <filesystem>
+#include <format>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <ostream>
 #include <string>
 #include <sstream>
@@ -141,35 +146,104 @@ std::string toUpper(const std::string& input) {
 }
 
 
-void convertTemperature(double& value, const std::string& fromUnit, const std::string& toUnit) {
-    std::cout << std::fixed << std::setprecision(4);
+double convertTemperature(double value, const std::string& fromUnit, const std::string& toUnit) {
+    const double ABSOLUTE_ZERO_C = -273.15;
+    const double ABSOLUTE_ZERO_F = -459.67;
+
+    // Convert to Kelvin first
+    double kelvin;
     if (fromUnit == "C") {
-        if (toUnit == "F") {
-            std::cout << value * 9.0 / 5.0 + 32.0 << std::endl;
-            return;
-        } else if (toUnit == "K") {
-            std::cout << value + 273.15 << std::endl;
-            return;
-        }
+        kelvin = value - ABSOLUTE_ZERO_C;
     } else if (fromUnit == "F") {
-        if (toUnit == "C") {
-            std::cout << (value - 32.0) * 5.0 / 9.0 << std::endl;
-            return;
-        } else if (toUnit == "K") {
-            std::cout << (value + 459.67) * 5.0 / 9.0 << std::endl;
-            return;
-        }
+        kelvin = (value - ABSOLUTE_ZERO_F) * 5.0 / 9.0;
     } else if (fromUnit == "K") {
-        if (toUnit == "C") {
-            std::cout << value - 273.15 << std::endl;
-            return;
-        } else if (toUnit == "F") {
-            std::cout << value * 9.0 / 5.0 - 459.67 << std::endl;
-            return;
-        }
-    } else
-        return;
+        kelvin = value;
+    } else {
+        throw std::invalid_argument("Invalid fromUnit: " + fromUnit);
+    }
+
+    // Convert from Kelvin to target unit
+    if (toUnit == "C") {
+        return kelvin + ABSOLUTE_ZERO_C;
+    } else if (toUnit == "F") {
+        return kelvin * 9.0 / 5.0 + ABSOLUTE_ZERO_F;
+    } else if (toUnit == "K") {
+        return kelvin;
+    } else {
+        throw std::invalid_argument("Invalid toUnit: " + toUnit);
+    }
 }
+
+
+void writeConversionHistory(const std::string& conversionRequest, const double& result) {
+    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
+
+    double index = 0;
+    try {
+        // First, if file exists, read the number of lines
+        if (std::filesystem::exists(historyPath)) {
+            std::ifstream countFile;
+            countFile.open(historyPath);
+            if (countFile.is_open()) {
+                index = std::count(std::istreambuf_iterator<char>(countFile), std::istreambuf_iterator<char>(), '\n');
+                countFile.close();
+            }
+        }
+
+        // Now, append conversion request to the history
+        std::ofstream historyFile(historyPath, std::ios::app);
+        if (!historyFile.is_open())
+            throw std::runtime_error("Unable to open history file");
+
+        historyFile << std::left << std::setw(4) << ++index << " uc " << conversionRequest << " " << result << std::endl;
+
+        if (historyFile.fail())
+            throw std::runtime_error("Unable to write to history file");
+
+        historyFile.close();
+    } catch (const std::exception& e) {
+        std::ofstream errorLog("~/.uc_error.log", std::ios::app);
+        if (errorLog.is_open()) {
+            errorLog << "Error writing to history" << e.what() << std::endl;
+        }
+    }
+}
+
+
+void displayConversionHistory() {
+    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
+
+    if (!std::filesystem::exists(historyPath)) {
+        std::cout << "No conversion history found." << std::endl;
+        return;
+    }
+
+    std::ifstream historyFile(historyPath);
+    if (!historyFile.is_open()) {
+        std::cout << "Unable to open history file." << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(historyFile, line))
+        std::cout << line << std::endl;
+
+    historyFile.close();
+}
+
+
+void clearConversionHistory() {
+    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME")) / ".uc_history";
+
+    if (std::filesystem::exists(historyPath)) {
+        std::ofstream ofs(historyPath, std::ios::trunc);
+        ofs.close();
+        std::cout << "Conversion history cleared." << std::endl;
+    } else {
+        std::cout << "No history file found. Nothing to clear." << std::endl;
+    }
+}
+
 
 /*
 Units Section:
@@ -243,13 +317,17 @@ struct Units {
         // Check first if unitFrom/unitsTo are temperature units
         std::unordered_set<std::string> tempUnits({ "C", "F", "K" });
         if (tempUnits.find(unitFrom) != tempUnits.end() && tempUnits.find(unitTo) != tempUnits.end()) {
-            convertTemperature(amount, unitFrom, unitTo);
+            double result = convertTemperature(amount, unitFrom, unitTo);
+            std::cout << std::fixed << std::setprecision(4) << result << std::endl;
+            writeConversionHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
             return;
         }
 
         std::cout << std::fixed << std::setprecision(4);
         if (unitFromBase == unitToBase) {
-            std::cout << (amount * conversionFactorFrom)/conversionFactorTo << std::endl;
+            double result = (amount * conversionFactorFrom)/conversionFactorTo;
+            std::cout << std::fixed << std::setprecision(4) << result << std::endl;
+            writeConversionHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
             return;
         }
 
@@ -341,10 +419,9 @@ struct Constants {
     }
 
     void valueOfConstant(const std::string& input) {
-        std::cout << std::fixed << std::setprecision(15);
         for (const auto& constant: constants) {
             if (toUpper(constant.name) == toUpper(input) || constant.symbol == input) {
-                std::cout << constant.value << std::endl;
+                std::cout << std::fixed << std::setprecision(15) << constant.value << std::endl;
                 return;
             }
         }
@@ -396,6 +473,11 @@ void printUsage() {
     std::cout << " -Cd                Display detailed view of all available constants" << std::endl;
     std::cout << " -C <group>         Display available constants in the specified group" << std::endl;
     std::cout << "                    Note: <group> is case agnostic" << std::endl;
+    std::cout << std::endl;
+    std::cout << " Conversion history:" << std::endl;
+    std::cout << " --hist             Display conversion history from all time. Manage history" << std::endl;
+    std::cout << "                    with head, tail, or grep commands." << std::endl;
+    std::cout << " --clrhist          Clear conversion history" << std::endl;
 }
 
 
@@ -406,13 +488,22 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         printUsage();
         return;
     }
-
     // -----------------------------------------------------------------------------------------------------
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)             // Show help/program usage
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {           // Show help/program usage
         printUsage();
+    }
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)          // Show version number
+    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) {        // Show version number
         std::cout << "Version 1.0" << std::endl;
+    }
+    // ------------------------------------------------------------------------------------------------------
+    else if (argc == 2 && std::string(argv[1]) == "--hist") {                      // Show conversion history
+        displayConversionHistory();
+    }
+    // ------------------------------------------------------------------------------------------------------
+    else if (argc == 2 && std::string(argv[1]) == "--clrhist") {                   // Show conversion history
+        clearConversionHistory();
+    }
     // ------------------------------------------------------------------------------------------------------
     else if (strcmp(argv[1], "-Cg") == 0) {                                          // List constants groups
         if (argc == 2)
