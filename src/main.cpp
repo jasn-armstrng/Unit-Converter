@@ -175,7 +175,7 @@ double convertTemperature(double value, const std::string& fromUnit, const std::
 }
 
 
-void writeHistory(const std::string& conversionRequest, const double& result) {
+void writeConversionHistory(const std::string& conversionRequest, const double& result) {
     std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
 
     double index = 0;
@@ -195,7 +195,7 @@ void writeHistory(const std::string& conversionRequest, const double& result) {
         if (!historyFile.is_open())
             throw std::runtime_error("Unable to open history file");
 
-        historyFile << ++index << " uc " << conversionRequest << " " << result << std::endl;
+        historyFile << std::left << std::setw(4) << ++index << " uc " << conversionRequest << " " << result << std::endl;
 
         if (historyFile.fail())
             throw std::runtime_error("Unable to write to history file");
@@ -210,7 +210,7 @@ void writeHistory(const std::string& conversionRequest, const double& result) {
 }
 
 
-void displayHistory() {
+void displayConversionHistory() {
     std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
 
     if (!std::filesystem::exists(historyPath)) {
@@ -232,7 +232,7 @@ void displayHistory() {
 }
 
 
-void clearHistory() {
+void clearConversionHistory() {
     std::filesystem::path historyPath = std::filesystem::path(getenv("HOME")) / ".uc_history";
 
     if (std::filesystem::exists(historyPath)) {
@@ -319,7 +319,7 @@ struct Units {
         if (tempUnits.find(unitFrom) != tempUnits.end() && tempUnits.find(unitTo) != tempUnits.end()) {
             double result = convertTemperature(amount, unitFrom, unitTo);
             std::cout << std::fixed << std::setprecision(4) << result << std::endl;
-            writeHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
+            writeConversionHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
             return;
         }
 
@@ -327,7 +327,7 @@ struct Units {
         if (unitFromBase == unitToBase) {
             double result = (amount * conversionFactorFrom)/conversionFactorTo;
             std::cout << std::fixed << std::setprecision(4) << result << std::endl;
-            writeHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
+            writeConversionHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
             return;
         }
 
@@ -419,10 +419,9 @@ struct Constants {
     }
 
     void valueOfConstant(const std::string& input) {
-        std::cout << std::fixed << std::setprecision(15);
         for (const auto& constant: constants) {
             if (toUpper(constant.name) == toUpper(input) || constant.symbol == input) {
-                std::cout << constant.value << std::endl;
+                std::cout << std::fixed << std::setprecision(15) << constant.value << std::endl;
                 return;
             }
         }
@@ -490,20 +489,20 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
         return;
     }
     // -----------------------------------------------------------------------------------------------------
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {             // Show help/program usage
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {           // Show help/program usage
         printUsage();
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) {          // Show version number
+    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) {        // Show version number
         std::cout << "Version 1.0" << std::endl;
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (argc == 2 && std::string(argv[1]) == "--hist") {                         // Show conversion history
-        displayHistory();
+    else if (argc == 2 && std::string(argv[1]) == "--hist") {                      // Show conversion history
+        displayConversionHistory();
     }
     // ------------------------------------------------------------------------------------------------------
-    else if (argc == 2 && std::string(argv[1]) == "--clrhist") {                         // Show conversion history
-        clearHistory();
+    else if (argc == 2 && std::string(argv[1]) == "--clrhist") {                   // Show conversion history
+        clearConversionHistory();
     }
     // ------------------------------------------------------------------------------------------------------
     else if (strcmp(argv[1], "-Cg") == 0) {                                          // List constants groups
