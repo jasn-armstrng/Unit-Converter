@@ -1,97 +1,89 @@
-UC(1)                           General Commands Manual                          UC(1)
+UC(1)                           User Commands                          UC(1)
 
 NAME
-       uc - (measurement) unit converter
+       uc - unit converter and constant value lookup utility
 
 SYNOPSIS
-       uc <amount> <unit_from> <unit_to>, uc <constant>
+       uc [OPTIONS] <value> <from_unit> <to_unit>
 
 DESCRIPTION
-       The uc utility,
-        1. Reads the units to convert between and the value(s) to be converted from the
-           standard input, and perfoms the conversion(s). The result(s) are then written
-           to the standard output.
-        2. Reads the constant specified from the standard input. The value of the const-
-           ant is then written to the standard output.
+       uc is a command-line utility for unit conversion and constant value
+       lookup. It supports conversion between various units across multiple
+       categories, provides values for mathematical and scientific constants,
+       and maintains a conversion history.
 
 OPTIONS
-        -h, --help
-            Display the help message and exit.
+       -h, --help
+              Display help message and exit.
 
-        -v, --version
-            Display version information and exit.
+       -v, --version
+              Display version information and exit.
 
-        -c
-            Display available unit categories.
+       -c     Display available unit categories.
 
-        -u <category> (Case agnostic)
-            Display available units in the specified category.
+       -u <category>
+              Display available units in the specified category.
+              Note: <category> is case-insensitive.
 
-        -Cg
-            Display available contants groups.
+       -Cg    Display available constant groups.
 
-        -Cd
-            Display all details for all constants
+       -Cd    Display detailed view of all available constants.
 
-        -C <group> (Case agnostic)
-            Display available constants in the specified group.
+       -C <group>
+              Display available constants in the specified group.
+              Note: <group> is case-insensitive.
 
-ARGUMENTS
-        <constant>
-            A valid constant name or symbol. A multi-worded constant name must
-            be quoted e.g. "Electron Rest Mass". Names of contants are evaluated
-            case-agnostic, but symbols are not.
+       --hist Display conversion history from all time.
 
-        <source_unit>
-            The unit being converted from. The proper unit symbol must be entered
-            e.g. km (Kilometer), mi (Mile), MB (Megabyte), as it is not evaluated
-            case agnostically.
+       --clrhist
+              Clear conversion history.
 
-        <target_unit>
-            The unit being converted to. The proper unit symbol must be entered
-            e.g. km (Kilometer), mi (Mile), MB (Megabyte), as it is not evaluated
-            case agnostically.
+UNIT CONVERSION
+       To convert units, use the following syntax:
 
-        <value1>
-            Must be either an integer or floating point value.
+       uc <value> <from_unit> <to_unit>
 
-EXAMPLES
-       Arguments to options are case insensitive; the below are all valid:
+       Example: uc 10 m ft
 
-            $ uc -u LENGTH
-            $ uc -u length
-            $ uc -u LenGth
-            $ uc taU
-            $ uc tau
-            $ uc TAU
+SUPPORTED CATEGORIES
+       DATA, DISTANCE, VOLUME, AREA, MASS, TIME, TEMPERATURE
 
-       Use quotes for constant arguments that contain spaces:
+       Use -c to list all categories and -u <category> to list units within
+       a specific category.
 
-            $ uc "SPEED OF LIGHT"
+CONSTANTS
+       Mathematical and scientific constants are supported. Use -Cg to list
+       constant groups, -Cd to show all constants with details, and
+       -C <group> to list constants in a specific group.
 
-       Conversions:
+       To get the value of a constant, simply use its name or symbol:
 
-            $ uc 5 meters feet
-            $ uc 2500 KB MB
-            $ uc 10.25 l gal
-            $ uc 50 C F
+       Example: uc pi
 
-EXIT STATUS
-       The uc utility exits 0 on success, and >0 if an error occurs.
+HISTORY
+       uc maintains a history of conversions. Use --hist to view the history
+       and --clrhist to clear it. The history file is stored at ~/.uc_history.
 
 FILES
-       [List any configuration files, data files, or system files the command uses]
+       ~/.uc_history
+              Stores the conversion history.
 
-ENVIRONMENT VARIABLES
-       [Describe any environment variables that affect the command's behavior]
-
-SEE ALSO
-       [List related commands, man pages, or external documentation]
+       ~/.uc_error.log
+              Logs errors encountered during operation.
 
 AUTHOR
-       Jason Armstrong
+       Written by Jason Armstrong.
 
-BUGS
-       [List known issues]
+REPORTING BUGS
+       Report bugs to: [ ... ]
 
-[Category]                              May 25, 2024                             UC(1)
+COPYRIGHT
+       Copyright © 2024 Jason Armstrong.
+       License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+       This is free software: you are free to change and redistribute it.
+       There is NO WARRANTY, to the extent permitted by law.
+
+SEE ALSO
+       Full documentation and source code available at, github.com/jasn-armstrng/unit-converter
+
+UC(1)                           User Commands                          UC(1)
