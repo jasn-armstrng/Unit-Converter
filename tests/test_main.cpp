@@ -97,8 +97,14 @@ TEST(UnitsTest, AllTestCases)
     std::size_t total_tests = test_cases.size();
     int test_counter = 0;
 
-    Units allUnits = loadUnits();
-    Constants allConstants = loadConstants();
+    Units U;
+    Constants C;
+
+    U.loadUnits(listOfUnits);
+    C.loadConstants(listOfConstants);
+
+    // Units allUnits = loadUnits();
+    // Constants allConstants = loadConstants();
 
     for (const auto& test_case : test_cases)
     {
@@ -109,7 +115,7 @@ TEST(UnitsTest, AllTestCases)
         const std::string run = std::format("\033[32m[ RUN      ]\033[0m - {}", test_name);
         std::cout << run << std::endl;
 
-        bool test_passed = run_test_case(test_name, args, expected_output, allUnits, allConstants);
+        bool test_passed = run_test_case(test_name, args, expected_output, U, C);
         if (test_passed)
         {
             test_counter++;
