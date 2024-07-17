@@ -15,24 +15,29 @@ Created by - Jason Armstrong
                                                ...
                                     - Leviticus 19:35-36 NKJV
 */
-
 #include <_ctype.h>
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
-#include <fstream>
 #include <filesystem>
 #include <format>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <string_view>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+
+bool isSwitch(const std::string& input);
+std::string toUpper(const std::string& input);
 
 
 const std::string_view listOfUnits = R"(DATA        Bit                 b       Bit            1
@@ -62,7 +67,10 @@ DISTANCE    Nanometer           nm      Meter          0.000000001
 DISTANCE    Inch                in      Meter          0.0254
 DISTANCE    Foot                ft      Meter          0.3048
 DISTANCE    Yard                yd      Meter          0.9144
+DISTANCE    Fathom              fth     Meter          1.829
+DISTANCE    Furlong             fur     Meter          201.68
 DISTANCE    Mile                mi      Meter          1609.34
+DISTANCE    Nautical Mile       nmi     Meter          1852
 VOLUME      Liter               l       Liter          1
 VOLUME      Milliliter          ml      Liter          0.001
 VOLUME      Cubic meter         m^3     Liter          1000
@@ -87,6 +95,7 @@ MASS        Milligram           mg      Kilogram       0.000001
 MASS        Metric ton          t       Kilogram       1000
 MASS        Pound               lb      Kilogram       0.453592
 MASS        Ounce               oz      Kilogram       0.0283495
+MASS        Stone               st      Kilogram       6.35029
 TIME        Second              s       Second         1
 TIME        Minute              min     Second         60
 TIME        Hour                h       Second         3600
@@ -146,319 +155,298 @@ std::string toUpper(const std::string& input) {
 }
 
 
-double convertTemperature(double value, const std::string& fromUnit, const std::string& toUnit) {
-    const double ABSOLUTE_ZERO_C = -273.15;
-    const double ABSOLUTE_ZERO_F = -459.67;
+class Units {
+    private:
+        struct Unit {
+            std::string name;
+            std::string symbol;
+            std::string category;
+            std::string baseUnit;
+            double conversionFactor;
+        };
 
-    // Convert to Kelvin first
-    double kelvin;
-    if (fromUnit == "C") {
-        kelvin = value - ABSOLUTE_ZERO_C;
-    } else if (fromUnit == "F") {
-        kelvin = (value - ABSOLUTE_ZERO_F) * 5.0 / 9.0;
-    } else if (fromUnit == "K") {
-        kelvin = value;
-    } else {
-        throw std::invalid_argument("Invalid fromUnit: " + fromUnit);
-    }
+        std::unordered_set<std::string> categories;
+        std::vector<Unit> units;
 
-    // Convert from Kelvin to target unit
-    if (toUnit == "C") {
-        return kelvin + ABSOLUTE_ZERO_C;
-    } else if (toUnit == "F") {
-        return kelvin * 9.0 / 5.0 + ABSOLUTE_ZERO_F;
-    } else if (toUnit == "K") {
-        return kelvin;
-    } else {
-        throw std::invalid_argument("Invalid toUnit: " + toUnit);
-    }
-}
+        double convertTemperature(double value, const std::string& fromUnit, const std::string& toUnit) {
+            const double ABSOLUTE_ZERO_C = -273.15;
+            const double ABSOLUTE_ZERO_F = -459.67;
 
+            // Convert to Kelvin first
+            double kelvin;
+            if (fromUnit == "C") {
+                kelvin = value - ABSOLUTE_ZERO_C;
+            } else if (fromUnit == "F") {
+                kelvin = (value - ABSOLUTE_ZERO_F) * 5.0 / 9.0;
+            } else if (fromUnit == "K") {
+                kelvin = value;
+            } else {
+                throw std::invalid_argument("Invalid fromUnit: " + fromUnit);
+            }
 
-void writeConversionHistory(const std::string& conversionRequest, const double& result) {
-    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
-
-    double index = 0;
-    try {
-        // First, if file exists, read the number of lines
-        if (std::filesystem::exists(historyPath)) {
-            std::ifstream countFile;
-            countFile.open(historyPath);
-            if (countFile.is_open()) {
-                index = std::count(std::istreambuf_iterator<char>(countFile), std::istreambuf_iterator<char>(), '\n');
-                countFile.close();
+            // Convert from Kelvin to target unit
+            if (toUnit == "C") {
+                return kelvin + ABSOLUTE_ZERO_C;
+            } else if (toUnit == "F") {
+                return kelvin * 9.0 / 5.0 + ABSOLUTE_ZERO_F;
+            } else if (toUnit == "K") {
+                return kelvin;
+            } else {
+                throw std::invalid_argument("Invalid toUnit: " + toUnit);
             }
         }
 
-        // Now, append conversion request to the history
-        std::ofstream historyFile(historyPath, std::ios::app);
-        if (!historyFile.is_open())
-            throw std::runtime_error("Unable to open history file");
+        void writeConversionHistory(const std::string& conversionRequest, const double& result) {
+            std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
 
-        historyFile << std::left << std::setw(4) << ++index << " uc " << conversionRequest << " " << result << std::endl;
+            double index = 0;
+            try {
+                // First, if file exists, read the number of lines
+                if (std::filesystem::exists(historyPath)) {
+                    std::ifstream countFile;
+                    countFile.open(historyPath);
+                    if (countFile.is_open()) {
+                        index = std::count(std::istreambuf_iterator<char>(countFile), std::istreambuf_iterator<char>(), '\n');
+                        countFile.close();
+                    }
+                }
 
-        if (historyFile.fail())
-            throw std::runtime_error("Unable to write to history file");
+                // Now, append conversion request to the history
+                std::ofstream historyFile(historyPath, std::ios::app);
+                if (!historyFile.is_open())
+                    throw std::runtime_error("Unable to open history file");
 
-        historyFile.close();
-    } catch (const std::exception& e) {
-        std::ofstream errorLog("~/.uc_error.log", std::ios::app);
-        if (errorLog.is_open()) {
-            errorLog << "Error writing to history" << e.what() << std::endl;
-        }
-    }
-}
+                historyFile << std::left << std::setw(4) << ++index << " uc " << conversionRequest << " " << result << std::endl;
 
+                if (historyFile.fail())
+                    throw std::runtime_error("Unable to write to history file");
 
-void displayConversionHistory() {
-    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
-
-    if (!std::filesystem::exists(historyPath)) {
-        std::cout << "No conversion history found." << std::endl;
-        return;
-    }
-
-    std::ifstream historyFile(historyPath);
-    if (!historyFile.is_open()) {
-        std::cout << "Unable to open history file." << std::endl;
-        return;
-    }
-
-    std::string line;
-    while (std::getline(historyFile, line))
-        std::cout << line << std::endl;
-
-    historyFile.close();
-}
-
-
-void clearConversionHistory() {
-    std::filesystem::path historyPath = std::filesystem::path(getenv("HOME")) / ".uc_history";
-
-    if (std::filesystem::exists(historyPath)) {
-        std::ofstream ofs(historyPath, std::ios::trunc);
-        ofs.close();
-        std::cout << "Conversion history cleared." << std::endl;
-    } else {
-        std::cout << "No history file found. Nothing to clear." << std::endl;
-    }
-}
-
-
-/*
-Units Section:
-    Defines structs and functions for managing units of measurement and performing unit conversions.
-        - The Unit struct represents a single unit with its name, symbol, category, base unit, and conversion factor.
-        - The Units struct contains a set of unique categories and a vector of units, along with methods to list categories,
-          list units within a category, and convert between units.
-        - The loadUnits function populates a Units object from a fixed column-width multiline string, extracting and storing
-          the data for each unit. The convertUnit method converts an amount from one unit to another, handling special cases
-          for temperature units and checking for compatibility between units.
-*/
-struct Unit {
-    std::string name;
-    std::string symbol;
-    std::string category;
-    std::string baseUnit;
-    double conversionFactor;
-};
-
-struct Units {
-    std::unordered_set<std::string> categories;
-    std::vector<Unit> units;
-
-    void listCategories() {
-        for (auto& category: categories) {
-            std::cout << std::left << category << std::endl;
-        }
-    }
-
-    void listUnits(const std::string& input) {
-        if (categories.count(toUpper(input)) > 0) {
-            for (const Unit& unit: units) {
-                if (unit.category == toUpper(input)) {
-                    std::cout << std::left
-                    << std::setw(20) << unit.name
-                    << std::setw(8) << unit.symbol << std::endl;
+                historyFile.close();
+            } catch (const std::exception& e) {
+                std::ofstream errorLog("~/.uc_error.log", std::ios::app);
+                if (errorLog.is_open()) {
+                    errorLog << "Error writing to history" << e.what() << std::endl;
                 }
             }
         }
-        else
-            std::cout << "Unknown category: " << input << std::endl;
-    }
 
-    void convertUnit(double& amount, const std::string& unitFrom, const std::string& unitTo) {
-        std::string unitFromBase;
-        std::string unitToBase;
-        double conversionFactorFrom = 0;
-        double conversionFactorTo = 0;
 
-        for (auto& unit: units) {
-            if (unit.name == unitFrom || unit.symbol == unitFrom) {
-                conversionFactorFrom = unit.conversionFactor;
-                unitFromBase = unit.baseUnit;}
+    public:
+        void loadUnits(const std::string_view& lOU) {
+            std::istringstream inputStream(lOU.data());
+            std::string line;
+            while(std::getline(inputStream, line)) {
+                std::string category = line.substr(0,12);
+                std::string name = line.substr(12,20);
+                std::string symbol = line.substr(32,8);
+                std::string baseUnit = line.substr(40,15);
+                std::string conversionFactor = line.substr(55,20);
 
-            if (unit.name == unitTo || unit.symbol == unitTo) {
-                conversionFactorTo = unit.conversionFactor;
-                unitToBase = unit.baseUnit;
+                // Trim whitespace
+                category.erase(category.find_last_not_of(" \t") + 1);
+                name.erase(name.find_last_not_of(" \t") + 1);
+                symbol.erase(symbol.find_last_not_of(" \t") + 1);
+                baseUnit.erase(baseUnit.find_last_not_of(" \t") + 1);
+                conversionFactor.erase(conversionFactor.find_last_not_of(" \t") + 1);
+
+                // Create the Unit and populate Units
+                Unit unit = { .name=name, .symbol=symbol, .category=category, .baseUnit=baseUnit, .conversionFactor=std::stod(conversionFactor) };
+                units.push_back(unit);
+                categories.insert(unit.category);
             }
         }
 
-        if (conversionFactorFrom == 0) {
-            std::cout << "Unknown unit: " << unitFrom << std::endl;
-            return;
+        void listCategories() {
+            for (const std::string& category: categories) {
+                std::cout << std::left << category << std::endl;
+            }
         }
 
-        if (conversionFactorTo == 0) {
-            std::cout << "Unknown unit: " << unitTo << std::endl;
-            return;
-        }
-
-        // Check first if unitFrom/unitsTo are temperature units
-        std::unordered_set<std::string> tempUnits({ "C", "F", "K" });
-        if (tempUnits.find(unitFrom) != tempUnits.end() && tempUnits.find(unitTo) != tempUnits.end()) {
-            double result = convertTemperature(amount, unitFrom, unitTo);
-            std::cout << std::fixed << std::setprecision(4) << result << std::endl;
-            writeConversionHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
-            return;
-        }
-
-        std::cout << std::fixed << std::setprecision(4);
-        if (unitFromBase == unitToBase) {
-            double result = (amount * conversionFactorFrom)/conversionFactorTo;
-            std::cout << std::fixed << std::setprecision(4) << result << std::endl;
-            writeConversionHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
-            return;
-        }
-
-        std::cout << "Cannot convert between: " << unitFrom << " and " << unitTo << std::endl;
-    }
-};
-
-
-Units loadUnits() {
-    std::istringstream inputStream(listOfUnits.data());
-    std::string line;
-    Units U;
-    while(std::getline(inputStream, line)) {
-        std::string category = line.substr(0,12);
-        std::string name = line.substr(12,20);
-        std::string symbol = line.substr(32,8);
-        std::string baseUnit = line.substr(40,15);
-        std::string conversionFactor = line.substr(55,20);
-
-        // Trim whitespace
-        category.erase(category.find_last_not_of(" \t") + 1);
-        name.erase(name.find_last_not_of(" \t") + 1);
-        symbol.erase(symbol.find_last_not_of(" \t") + 1);
-        baseUnit.erase(baseUnit.find_last_not_of(" \t") + 1);
-        conversionFactor.erase(conversionFactor.find_last_not_of(" \t") + 1);
-
-        // Create the Unit and populate Units
-        Unit unit = { name, symbol, category, baseUnit, std::stod(conversionFactor) };
-        U.units.push_back(unit);
-        U.categories.insert(unit.category);
-    }
-    return U;
-}
-
-/*
-Constants Section:
-    Defines structs and functions for managing a collection of physical constants.
-        - The Constant struct represents a single physical constant with its name, symbol, group, value, and unit.
-        - The Constants struct contains a set of unique groups and a map of constants, along with methods to list groups,
-          list constants within a group, list all constants, and retrieve the value of a specific constant.
-        - The loadConstants function populates a Constants object from a fixed column-width multiline string, extracting
-            and storing the data for each constant.
-*/
-struct Constant {
-    std::string name;
-    std::string symbol;
-    std::string group;
-    std::string value;
-    std::string unit;
-};
-
-
-struct Constants {
-    std::unordered_set<std::string> groups;
-    std::vector<Constant> constants;
-
-    void listGroups() {
-        for (auto& group: groups) {
-            std::cout << std::setw(3) << std::left << group << std::endl;
-        }
-    }
-
-    void listConstants(const std::string& input) {
-        if (groups.count(toUpper(input)) > 0) {
-            for (const auto& constant: constants) {
-                if (constant.group == toUpper(input)) {
-                    std::cout << std::left
-                        << std::setw(31) << constant.name
-                        << std::setw(8) << constant.symbol << std::endl;
+        void listUnits(const std::string& input) {
+            if (categories.count(toUpper(input)) > 0) {
+                for (const Unit& unit: units) {
+                    if (unit.category == toUpper(input)) {
+                        std::cout << std::left
+                        << std::setw(20) << unit.name
+                        << std::setw(8) << unit.symbol << std::endl;
+                    }
                 }
             }
-        }
-        else
-            std::cout << "Unknown group: " << input << std::endl;
-    }
-
-    void listConstantsDetailed() {
-        for (auto& group: groups) {
-            for (const auto& constant: constants) {
-                if (constant.group == group) {
-                    std::cout << std::left << std::setw(16) << constant.group
-                            << std::setw(32) << constant.name
-                            << std::setw(12) << constant.symbol
-                            << std::setw(20) << constant.value
-                            << std::setw(20) << constant.unit << std::endl;
-                }
+            else {
+                std::cout << "Unknown category: " << input << std::endl;
             }
         }
-    }
 
-    void valueOfConstant(const std::string& input) {
-        for (const auto& constant: constants) {
-            if (toUpper(constant.name) == toUpper(input) || constant.symbol == input) {
-                std::cout << std::fixed << std::setprecision(15) << constant.value << std::endl;
+        void convertUnit(double& amount, const std::string& unitFrom, const std::string& unitTo) {
+            std::string unitFromBase;
+            std::string unitToBase;
+            double conversionFactorFrom = 0;
+            double conversionFactorTo = 0;
+
+            for (Unit& unit: units) {
+                if (unit.name == unitFrom || unit.symbol == unitFrom) {
+                    conversionFactorFrom = unit.conversionFactor;
+                    unitFromBase = unit.baseUnit;
+                }
+
+                if (unit.name == unitTo || unit.symbol == unitTo) {
+                    conversionFactorTo = unit.conversionFactor;
+                    unitToBase = unit.baseUnit;
+                }
+            }
+
+            if (conversionFactorFrom == 0) {
+                std::cout << "Unknown unit: " << unitFrom << std::endl;
                 return;
             }
+
+            if (conversionFactorTo == 0) {
+                std::cout << "Unknown unit: " << unitTo << std::endl;
+                return;
+            }
+
+            // Check first if unitFrom/unitsTo are temperature units
+            std::unordered_set<std::string> tempUnits ( { "C", "F", "K" } );
+            if (tempUnits.find(unitFrom) != tempUnits.end() && tempUnits.find(unitTo) != tempUnits.end()) {
+                double result = convertTemperature(amount, unitFrom, unitTo);
+                std::cout << std::fixed << std::setprecision(4) << result << std::endl;
+                writeConversionHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
+                return;
+            }
+
+            if (unitFromBase == unitToBase) {
+                double result = (amount * conversionFactorFrom)/conversionFactorTo;
+                std::cout << std::fixed << std::setprecision(4) << result << std::endl;
+                writeConversionHistory(std::format("{} {} {}", amount, unitFrom, unitTo), result);
+                return;
+            }
+            std::cout << "Cannot convert between: " << unitFrom << " and " << unitTo << std::endl;
         }
-        std::cout << "Unknown constant: " << input << std::endl;
-    }
+
+        void displayConversionHistory() {
+            std::filesystem::path historyPath = std::filesystem::path(getenv("HOME"))/".uc_history";
+
+            if (!std::filesystem::exists(historyPath)) {
+                std::cout << "No conversion history found." << std::endl;
+                return;
+            }
+
+            std::ifstream historyFile(historyPath);
+            if (!historyFile.is_open()) {
+                std::cout << "Unable to open history file." << std::endl;
+                return;
+            }
+
+            std::string line;
+            while (std::getline(historyFile, line))
+                std::cout << line << std::endl;
+
+            historyFile.close();
+        }
+
+
+        void clearConversionHistory() {
+            std::filesystem::path historyPath = std::filesystem::path(getenv("HOME")) / ".uc_history";
+
+            if (std::filesystem::exists(historyPath)) {
+                std::ofstream ofs(historyPath, std::ios::trunc);
+                ofs.close();
+                std::cout << "Conversion history cleared." << std::endl;
+            } else {
+                std::cout << "No history file found. Nothing to clear." << std::endl;
+            }
+        }
 };
 
 
-Constants loadConstants() {
-    std::istringstream inputStream(listOfConstants.data());
-    std::string line;
-    Constants C;
-    while(std::getline(inputStream, line)) {
-        std::string group = line.substr(0,16);
-        std::string name = line.substr(16,31);
-        std::string symbol = line.substr(47,12);
-        std::string value = line.substr(59,20);
-        std::string unit = line.substr(79,20);
+class Constants {
+    private:
+        struct Constant {
+            std::string name;
+            std::string symbol;
+            std::string group;
+            std::string value;
+            std::string unit;
+        };
 
-        // Trim whitespace
-        group.erase(group.find_last_not_of(" \t") + 1);
-        name.erase(name.find_last_not_of(" \t") + 1);
-        symbol.erase(symbol.find_last_not_of(" \t") + 1);
-        value.erase(value.find_last_not_of(" \t") + 1);
-        unit.erase(unit.find_last_not_of(" \t") + 1);
+        std::unordered_set<std::string> groups;
+        std::vector<Constant> constants;
 
-        // Create the Unit and populate Units
-        Constant constant = { name, symbol, group, value, unit };
-        C.constants.push_back(constant);
-        C.groups.insert(constant.group);
-    }
-    return C;
-}
+    public:
+        void loadConstants(const std::string_view& lOC) {
+            std::istringstream inputStream(lOC.data());
+            std::string line;
+            while(std::getline(inputStream, line)) {
+                std::string group = line.substr(0,16);
+                std::string name = line.substr(16,31);
+                std::string symbol = line.substr(47,12);
+                std::string value = line.substr(59,20);
+                std::string unit = line.substr(79,20);
+
+                // Trim whitespace
+                group.erase(group.find_last_not_of(" \t") + 1);
+                name.erase(name.find_last_not_of(" \t") + 1);
+                symbol.erase(symbol.find_last_not_of(" \t") + 1);
+                value.erase(value.find_last_not_of(" \t") + 1);
+                unit.erase(unit.find_last_not_of(" \t") + 1);
+
+                // Create the Unit and populate Units
+                Constant constant = { name, symbol, group, value, unit };
+                constants.push_back(constant);
+                groups.insert(constant.group);
+            }
+        }
+
+        void listGroups() {
+            for (const std::string& group: groups) {
+                std::cout << std::setw(3) << std::left << group << std::endl;
+            }
+        }
+
+        void listConstants(const std::string& input) {
+            if (groups.count(toUpper(input)) > 0) {
+                for (Constant constant: constants) {
+                    if (constant.group == toUpper(input)) {
+                        std::cout << std::left
+                            << std::setw(31) << constant.name
+                            << std::setw(8) << constant.symbol << std::endl;
+                    }
+                }
+            }
+            else
+                std::cout << "Unknown group: " << input << std::endl;
+        }
+
+        void listConstantsDetailed() {
+            for (const std::string& group: groups) {
+                for (const Constant& constant: constants) {
+                    if (constant.group == group) {
+                        std::cout << std::left << std::setw(16) << constant.group
+                                << std::setw(32) << constant.name
+                                << std::setw(12) << constant.symbol
+                                << std::setw(20) << constant.value
+                                << std::setw(20) << constant.unit << std::endl;
+                    }
+                }
+            }
+        }
+
+        void valueOfConstant(const std::string& input) {
+            for (const Constant& constant: constants) {
+                if (toUpper(constant.name) == toUpper(input) || constant.symbol == input) {
+                    std::cout << std::fixed << std::setprecision(15) << constant.value << std::endl;
+                    return;
+                }
+            }
+            std::cout << "Unknown constant: " << input << std::endl;
+        }
+
+};
 
 
 void printUsage() {
     std::cout << "Usage: uc [OPTIONS] <value> <from_unit> <to_unit>" << std::endl;
+    std::cout << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << " -h, --help         Display this help message and exit" << std::endl;
     std::cout << " -v, --version      Display version information and exit" << std::endl;
@@ -482,30 +470,30 @@ void printUsage() {
 
 
 void uc(int argc, char* argv[], Units& u, Constants& c) {
-    // -----------------------------------------------------------------------------------------------------
-    if (argc == 1) {                                                                  // Check for arguments
+    // Check for arguments
+    if (argc == 1) {
         std::cout << "No arguments provided." << std::endl;
         printUsage();
         return;
     }
-    // -----------------------------------------------------------------------------------------------------
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {           // Show help/program usage
+    // Show help/program usage
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
         printUsage();
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) {        // Show version number
+    // Show version number
+    else if (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0) {
         std::cout << "Version 1.0" << std::endl;
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (argc == 2 && std::string(argv[1]) == "--hist") {                      // Show conversion history
-        displayConversionHistory();
+    // Show conversion history
+    else if (argc == 2 && std::string(argv[1]) == "--hist") {
+        u.displayConversionHistory();
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (argc == 2 && std::string(argv[1]) == "--clrhist") {                   // Show conversion history
-        clearConversionHistory();
+    // Show conversion history
+    else if (argc == 2 && std::string(argv[1]) == "--clrhist") {
+        u.clearConversionHistory();
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-Cg") == 0) {                                          // List constants groups
+    // List constants groups
+    else if (strcmp(argv[1], "-Cg") == 0) {
         if (argc == 2)
             c.listGroups();
         else {
@@ -513,8 +501,8 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
             printUsage();
         }
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-C") == 0) {                               // List constants for specfied group
+    // List constants for specfied group
+    else if (strcmp(argv[1], "-C") == 0) {
         if (argc == 3)
             c.listConstants(argv[2]);
         else if (argc < 3) {
@@ -525,8 +513,8 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
             printUsage();
         }
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-Cd") == 0) {                             // List all details for all constants
+    // List all details for all constants
+    else if (strcmp(argv[1], "-Cd") == 0) {
         if (argc == 2)
             c.listConstantsDetailed();
         else {
@@ -534,16 +522,16 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
             printUsage();
         }
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (argc == 2 && !isSwitch(argv[1])) {                      // Show value of valid constant provided
+    // Show value of valid constant provided
+    else if (argc == 2 && !isSwitch(argv[1])) {
         try {
             c.valueOfConstant(argv[1]);
         } catch (const std::invalid_argument& e) {
             printUsage();
         }
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-c") == 0) {                                            // List unit categories
+    // List unit categories
+    else if (strcmp(argv[1], "-c") == 0) {
         if (argc == 2)
             u.listCategories();
         else {
@@ -551,8 +539,8 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
             printUsage();
         }
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (strcmp(argv[1], "-u") == 0) {                               // List units for specified category
+    // List units for specified category
+    else if (strcmp(argv[1], "-u") == 0) {
         if (argc == 3)
             u.listUnits(argv[2]);
         else if (argc < 3) {
@@ -563,8 +551,8 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
             printUsage();
         }
     }
-    // ------------------------------------------------------------------------------------------------------
-    else if (argc == 4) {                                                          // Convert valid statement
+    // Convert valid statement
+    else if (argc == 4) {
         try {
             double amount = std::stod(argv[1]);
             std::string unitFrom = argv[2];
@@ -585,10 +573,13 @@ void uc(int argc, char* argv[], Units& u, Constants& c) {
 
 
 int main(int argc, char* argv[]) {
-    Units allUnits = loadUnits();
-    Constants allConstants = loadConstants();
+    Units U;
+    Constants C;
 
-    uc(argc, argv, allUnits, allConstants);
+    U.loadUnits(listOfUnits);
+    C.loadConstants(listOfConstants);
 
-    return 0;
+    uc(argc, argv, U, C);
+
+    return EXIT_SUCCESS;
 }
